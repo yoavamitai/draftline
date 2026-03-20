@@ -69,7 +69,7 @@ export function AppSidebar({ editor }: Props) {
   }
 
   return (
-    <Sidebar collapsible="offcanvas" variant="inset">
+    <Sidebar collapsible="offcanvas" variant="floating">
       <SidebarHeader className="gap-2 p-3">
         {editing ? (
           <input
@@ -78,11 +78,11 @@ export function AppSidebar({ editor }: Props) {
             onChange={(e) => setDraft(e.target.value)}
             onBlur={commitEdit}
             onKeyDown={onKeyDown}
-            className="text-sm font-medium bg-transparent border-b border-border outline-none w-full truncate"
+            className="text-lg font-medium bg-transparent border-b border-border outline-none w-full truncate"
           />
         ) : (
           <span
-            className="text-sm font-medium truncate cursor-text hover:opacity-70 transition-opacity"
+            className="text-lg font-medium truncate cursor-text hover:opacity-70 transition-opacity"
             onClick={startEditing}
           >
             {displayName}

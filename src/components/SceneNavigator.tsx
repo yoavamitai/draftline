@@ -50,7 +50,7 @@ export function SceneNavigator({ editor }: Props) {
   return (
     <ScrollArea className="h-full">
       <div className="p-2 space-y-0.5">
-        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground px-2 py-1">
+        <p className="text-sm font-semibold uppercase tracking-wider text-muted-foreground px-2 py-1">
           Scenes
         </p>
         {scenes.length === 0 && (
@@ -60,7 +60,7 @@ export function SceneNavigator({ editor }: Props) {
           <button
             key={`${s.title}-${s.pos}`}
             onClick={() => jumpTo(s.pos)}
-            className="w-full text-left text-xs px-2 py-1 rounded hover:bg-accent truncate"
+            className="w-full text-left text-sm px-2 py-1 rounded hover:bg-accent truncate"
           >
             {s.title}
           </button>
