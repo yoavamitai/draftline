@@ -28,11 +28,19 @@ const MENU_HEIGHT = BLOCK_TYPES.length * 36 + 8;
 
 export function BlockPicker({ open, anchor, onSelect, onClose }: BlockPickerProps) {
   const [activeIndex, setActiveIndex] = useState(0);
+  const activeIndexRef = useRef(0);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (open) setActiveIndex(0);
+    if (open) {
+      setActiveIndex(0);
+      activeIndexRef.current = 0;
+    }
   }, [open]);
+
+  // Keep ref in sync so the keydown handler can read the current index without
+  // being re-registered on every arrow-key press.
+  activeIndexRef.current = activeIndex;
 
   useEffect(() => {
     if (!open) return;
@@ -48,7 +56,7 @@ export function BlockPicker({ open, anchor, onSelect, onClose }: BlockPickerProp
       } else if (e.key === "Enter") {
         e.preventDefault();
         e.stopPropagation();
-        onSelect(BLOCK_TYPES[activeIndex].type);
+        onSelect(BLOCK_TYPES[activeIndexRef.current].type);
       } else if (e.key === "Escape") {
         e.preventDefault();
         e.stopPropagation();
@@ -57,7 +65,7 @@ export function BlockPicker({ open, anchor, onSelect, onClose }: BlockPickerProp
     };
     document.addEventListener("keydown", onKeyDown, true);
     return () => document.removeEventListener("keydown", onKeyDown, true);
-  }, [open, activeIndex, onSelect, onClose]);
+  }, [open, onSelect, onClose]);
 
   useEffect(() => {
     if (!open) return;

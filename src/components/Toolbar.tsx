@@ -2,6 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useAppStore } from "../store/useAppStore";
+import { useShallow } from "zustand/react/shallow";
 import { openFile, saveFile, renameScript } from "../lib/fileManager";
 import { Sun, Moon, PanelLeft, Save, SaveAll, FolderOpen, GitBranch, FileDown } from "lucide-react";
 import { exportToPdf } from "../lib/pdf";
@@ -21,7 +22,18 @@ export function Toolbar({ editor }: Props) {
     toggleTheme,
     toggleSidebar,
     toggleRevisionMode,
-  } = useAppStore();
+  } = useAppStore(
+    useShallow((s) => ({
+      filePath: s.filePath,
+      scriptName: s.scriptName,
+      isDirty: s.isDirty,
+      theme: s.theme,
+      revisionMode: s.revisionMode,
+      toggleTheme: s.toggleTheme,
+      toggleSidebar: s.toggleSidebar,
+      toggleRevisionMode: s.toggleRevisionMode,
+    })),
+  );
   const displayName = filePath
     ? filePath
         .split(/[\\/]/)

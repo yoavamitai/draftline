@@ -3,19 +3,9 @@ import { invoke } from "@tauri-apps/api/core";
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useAppStore } from "../store/useAppStore";
 import { tempDir } from "@tauri-apps/api/path";
+import { type TDoc, nodeText } from "./nodeUtils";
 
-type TNode = { type: string; content?: TNode[]; text?: string; attrs?: Record<string, any> };
-
-function nodeText(node: TNode): string {
-  if (node.text) return node.text;
-  return (node.content ?? []).map(nodeText).join("");
-}
-
-function buildScreenplayHtml(
-  fileTitle: string,
-  doc: { type: string; content: TNode[] },
-  hasRevisions: boolean,
-): string {
+function buildScreenplayHtml(fileTitle: string, doc: TDoc, hasRevisions: boolean): string {
   const titlePageHtml = `
 <div class="title-page">
   <div class="title-block">

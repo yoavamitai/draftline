@@ -1,5 +1,5 @@
 // src/components/SceneNavigator.tsx
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Props {
@@ -13,6 +13,7 @@ interface Scene {
 
 export function SceneNavigator({ editor }: Props) {
   const [scenes, setScenes] = useState<Scene[]>([]);
+  const prevScenesRef = useRef<Scene[]>([]);
 
   useEffect(() => {
     if (!editor) return;
@@ -23,6 +24,14 @@ export function SceneNavigator({ editor }: Props) {
           found.push({ title: node.textContent, pos });
         }
       });
+      // Skip re-render if the scene list hasn't actually changed.
+      const prev = prevScenesRef.current;
+      if (
+        found.length === prev.length &&
+        found.every((s, i) => s.title === prev[i].title && s.pos === prev[i].pos)
+      )
+        return;
+      prevScenesRef.current = found;
       setScenes(found);
     };
     update();

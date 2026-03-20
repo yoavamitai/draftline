@@ -13,9 +13,25 @@ export const AutoDetect = Extension.create({
         key: new PluginKey("autoDetect"),
         appendTransaction(transactions, _oldState, newState) {
           if (!transactions.some((tr) => tr.docChanged)) return null;
+
+          // Compute the combined changed range in the new document so we only
+          // scan nodes near the edit instead of walking the whole document.
+          let changedFrom = newState.doc.content.size;
+          let changedTo = 0;
+          for (const tx of transactions) {
+            if (!tx.docChanged) continue;
+            tx.mapping.maps.forEach((stepMap) => {
+              stepMap.forEach((_oldFrom, _oldTo, newFrom, newTo) => {
+                changedFrom = Math.min(changedFrom, newFrom);
+                changedTo = Math.max(changedTo, newTo);
+              });
+            });
+          }
+          if (changedFrom > changedTo) return null;
+
           const tr = newState.tr;
           let changed = false;
-          newState.doc.descendants((node, pos) => {
+          newState.doc.nodesBetween(changedFrom, changedTo, (node, pos) => {
             const text = node.textContent.trim();
             if (!node.isBlock || !text) return;
             const currentType = node.type.name;
