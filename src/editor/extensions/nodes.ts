@@ -1,7 +1,8 @@
 // src/editor/extensions/nodes.ts
 import { Node, mergeAttributes } from '@tiptap/core'
+import type { BlockType } from '../../types/screenplay'
 
-function makeScreenplayNode(name: string, tag = 'p') {
+function makeScreenplayNode(name: BlockType, tag = 'p') {
   return Node.create({
     name,
     group: 'block',
