@@ -42,3 +42,6 @@ export const useAppStore = create<AppStore>()(
     { name: 'screenplay-app-store', partialize: (s) => ({ theme: s.theme, sidebarOpen: s.sidebarOpen }) }
   )
 )
+
+// Attach getInitialState as a static method on the store
+;(useAppStore as any).getInitialState = () => initialState

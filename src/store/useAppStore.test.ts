@@ -4,7 +4,7 @@ import { useAppStore } from './useAppStore'
 
 describe('useAppStore', () => {
   beforeEach(() => {
-    useAppStore.setState(useAppStore.getState().getInitialState())
+    useAppStore.setState((useAppStore as any).getInitialState())
   })
 
   it('starts with no file, clean, dark theme', () => {

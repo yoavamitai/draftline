@@ -24,3 +24,5 @@ export interface AppState {
   revisionColor: RevisionColor
   revisionDraftName: string
 }
+
+export { REVISION_COLOR_SEQUENCE, REVISION_HEX } from './revisionConstants'
