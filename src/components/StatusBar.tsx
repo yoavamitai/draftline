@@ -13,12 +13,16 @@ export function StatusBar({ editor }: Props) {
 
   useEffect(() => {
     if (!editor) return;
-    const update = () => {
+
+    // Recalculate pages + words only when the document content changes.
+    const onDocUpdate = () => {
       const doc = editor.getJSON();
       setWords(estimateWordCount(doc));
       setPages(estimatePageCount(doc));
+    };
 
-      // Current scene
+    // Recalculate current scene position on any selection or doc change.
+    const onSelectionUpdate = () => {
       const { $from } = editor.state.selection;
       let currentScene = 0;
       let totalScenes = 0;
@@ -30,12 +34,16 @@ export function StatusBar({ editor }: Props) {
       });
       setSceneInfo(totalScenes ? `Scene ${currentScene} of ${totalScenes}` : "—");
     };
-    update();
-    editor.on("update", update);
-    editor.on("selectionUpdate", update);
+
+    onDocUpdate();
+    onSelectionUpdate();
+    editor.on("update", onDocUpdate);
+    editor.on("update", onSelectionUpdate);
+    editor.on("selectionUpdate", onSelectionUpdate);
     return () => {
-      editor.off("update", update);
-      editor.off("selectionUpdate", update);
+      editor.off("update", onDocUpdate);
+      editor.off("update", onSelectionUpdate);
+      editor.off("selectionUpdate", onSelectionUpdate);
     };
   }, [editor]);
 

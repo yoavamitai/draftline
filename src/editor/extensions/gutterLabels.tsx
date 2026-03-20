@@ -12,11 +12,18 @@ const GUTTER_BLOCKS: Record<string, { icon: ReactElement; text: string }> = {
   transition: { icon: <ArrowRight size={12} />, text: "TRANS" },
 };
 
+// Pre-render SVGs once at module load — not per decoration.
+const GUTTER_SVGS: Record<string, string> = Object.fromEntries(
+  Object.entries(GUTTER_BLOCKS).map(([type, { icon, text }]) => [
+    type,
+    `${renderToStaticMarkup(icon)} ${text} ▾`,
+  ]),
+);
+
 function createLabel(type: string, onOpen: (rect: DOMRect) => void): HTMLElement {
   const span = document.createElement("span");
   span.className = "gutter-label";
-  const { icon, text } = GUTTER_BLOCKS[type];
-  span.innerHTML = `${renderToStaticMarkup(icon)} ${text} ▾`;
+  span.innerHTML = GUTTER_SVGS[type];
   span.addEventListener("click", (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -24,6 +31,20 @@ function createLabel(type: string, onOpen: (rect: DOMRect) => void): HTMLElement
   });
   return span;
 }
+
+function buildDecorations(doc: any, onOpen: (rect: DOMRect) => void): DecorationSet {
+  const decos: Decoration[] = [];
+  doc.forEach((node: any, pos: number) => {
+    if (node.type.name in GUTTER_BLOCKS) {
+      decos.push(
+        Decoration.widget(pos + 1, () => createLabel(node.type.name, onOpen), { side: -1 }),
+      );
+    }
+  });
+  return DecorationSet.create(doc, decos);
+}
+
+const gutterLabelsKey = new PluginKey<DecorationSet>("gutterLabels");
 
 export const GutterLabels = Extension.create({
   name: "gutterLabels",
@@ -39,20 +60,19 @@ export const GutterLabels = Extension.create({
 
     return [
       new Plugin({
-        key: new PluginKey("gutterLabels"),
+        key: gutterLabelsKey,
+        state: {
+          init(_, { doc }) {
+            return buildDecorations(doc, onOpen);
+          },
+          // Only rebuild when the document changes — selection changes are free.
+          apply(tr, decorations) {
+            return tr.docChanged ? buildDecorations(tr.doc, onOpen) : decorations;
+          },
+        },
         props: {
           decorations(state) {
-            const decos: Decoration[] = [];
-            state.doc.forEach((node, pos) => {
-              if (node.type.name in GUTTER_BLOCKS) {
-                decos.push(
-                  Decoration.widget(pos + 1, () => createLabel(node.type.name, onOpen), {
-                    side: -1,
-                  }),
-                );
-              }
-            });
-            return DecorationSet.create(state.doc, decos);
+            return gutterLabelsKey.getState(state) ?? DecorationSet.empty;
           },
         },
       }),

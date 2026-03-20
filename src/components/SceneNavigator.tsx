@@ -31,13 +31,11 @@ export function SceneNavigator({ editor }: Props) {
   }, [editor]);
 
   const jumpTo = (pos: number) => {
-    editor
-      .chain()
-      .focus()
-      .setTextSelection(pos + 1)
-      .run();
-    const dom = editor.view.domAtPos(pos + 1)?.node as HTMLElement;
-    dom?.scrollIntoView?.({ behavior: "smooth", block: "center" });
+    editor.commands.setTextSelection(pos + 1);
+    requestAnimationFrame(() => {
+      const dom = editor.view.domAtPos(pos + 1)?.node as HTMLElement;
+      dom?.scrollIntoView?.({ behavior: "smooth", block: "center" });
+    });
   };
 
   return (
