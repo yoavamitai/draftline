@@ -187,6 +187,75 @@
 .ProseMirror {
   outline: none;
 }
+
+/* Gutter labels — full-width blocks only (action, sceneHeading, transition) */
+.ProseMirror [data-type] {
+  position: relative;
+}
+
+.gutter-label {
+  position: absolute;
+  left: -60px;
+  top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 9px;
+  font-family: var(--font-sans);
+  color: var(--muted-foreground);
+  opacity: 0;
+  transition: opacity 0.12s;
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  line-height: 1;
+}
+
+.gutter-label svg {
+  flex-shrink: 0;
+}
+
+.ProseMirror [data-type]:hover .gutter-label {
+  opacity: 1;
+}
+
+/* Block picker menu */
+.block-picker {
+  background: var(--popover);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  box-shadow: 0 4px 16px oklch(0 0 0 / 12%);
+  padding: 4px;
+  min-width: 180px;
+  font-family: var(--font-sans);
+}
+
+.block-picker-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  color: var(--popover-foreground);
+  font-size: 13px;
+}
+
+.block-picker-item.active {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+
+.block-picker-icon {
+  display: flex;
+  align-items: center;
+  color: var(--muted-foreground);
+  flex-shrink: 0;
+}
+
+.block-picker-item.active .block-picker-icon {
+  color: var(--accent-foreground);
+}
 .ProseMirror [data-type].is-empty:first-child::before {
   content: attr(data-placeholder);
   color: var(--muted-foreground);
