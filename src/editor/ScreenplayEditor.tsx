@@ -12,6 +12,7 @@ import { AutoDetect } from "./extensions/autoDetect";
 import { RevisionMark } from "./extensions/revisionMark";
 import { SlashCommand } from "./extensions/slashCommand";
 import { GutterLabels } from "./extensions/gutterLabels";
+import { PageBreaks } from "./extensions/pageBreaks";
 import { BlockPicker } from "../components/BlockPicker";
 import { useAppStore } from "../store/useAppStore";
 import type { BlockType } from "../types/screenplay";
@@ -49,6 +50,7 @@ export function ScreenplayEditor({ onEditorReady }: Props) {
       Placeholder.configure({ placeholder: "Start your script…" }),
       SlashCommand.configure({ onOpen: handleOpen, onClose: handleClose }),
       GutterLabels.configure({ onOpen: handleOpen }),
+      PageBreaks,
     ],
     content: {
       type: "doc",
