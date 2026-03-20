@@ -128,3 +128,36 @@
     @apply font-sans;
     }
 }
+
+/* Courier Prime font (loaded from Google Fonts in index.html) */
+
+/* Screenplay page container */
+.screenplay-page {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: 48px 64px;
+  font-family: 'Courier Prime', 'Courier New', monospace;
+  font-size: 12pt;
+  line-height: 1.6;
+  min-height: 100%;
+}
+
+/* Block styles */
+.sp-sceneHeading  { font-weight: bold; text-transform: uppercase; margin: 1em 0 0.25em; }
+.sp-action        { margin: 0.25em 0; }
+.sp-character     { text-align: center; text-transform: uppercase; margin: 1em auto 0; width: 60%; }
+.sp-dialogue      { margin: 0 auto; width: 65%; }
+.sp-parenthetical { text-align: center; width: 50%; margin: 0 auto; }
+.sp-transition    { text-align: right; text-transform: uppercase; margin: 1em 0; }
+.sp-section       { color: #6366f1; font-style: italic; }
+.sp-screenplayNote{ color: #9ca3af; font-size: 0.85em; }
+
+/* TipTap editor reset */
+.ProseMirror { outline: none; }
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: #9ca3af;
+  pointer-events: none;
+  float: left;
+  height: 0;
+}
