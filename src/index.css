@@ -140,6 +140,9 @@
   font-size: 12pt;
   line-height: 1.6;
   min-height: 100%;
+  color: var(--foreground);
+  border: 1px solid color-mix(in oklch, var(--foreground) 12%, transparent);
+  border-radius: var(--radius-sm);
 }
 
 /* Block styles */
@@ -184,9 +187,9 @@
 .ProseMirror {
   outline: none;
 }
-.ProseMirror p.is-editor-empty:first-child::before {
+.ProseMirror [data-type].is-empty:first-child::before {
   content: attr(data-placeholder);
-  color: #9ca3af;
+  color: var(--muted-foreground);
   pointer-events: none;
   float: left;
   height: 0;

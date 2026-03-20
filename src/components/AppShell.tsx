@@ -26,7 +26,7 @@ export function AppShell() {
             <SceneNavigator editor={editor} />
           </div>
         )}
-        <div className="flex-1 overflow-y-auto bg-background">
+        <div className="flex-1 overflow-y-auto bg-background py-2">
           <ScreenplayEditor onEditorReady={setEditor} />
         </div>
       </div>
