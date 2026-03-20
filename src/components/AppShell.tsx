@@ -1,15 +1,14 @@
 // src/components/AppShell.tsx
 import { useState, useEffect } from "react";
-import { Toolbar } from "./Toolbar";
-import { SceneNavigator } from "./SceneNavigator";
+import type { Editor } from "@tiptap/core";
+import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
+import { AppSidebar } from "./AppSidebar";
 import { StatusBar } from "./StatusBar";
 import { ScreenplayEditor } from "../editor/ScreenplayEditor";
-import { useAppStore } from "../store/useAppStore";
 import { startAutoSave } from "../lib/fileManager";
 
 export function AppShell() {
-  const sidebarOpen = useAppStore((s) => s.sidebarOpen);
-  const [editor, setEditor] = useState<any>(null);
+  const [editor, setEditor] = useState<Editor | null>(null);
 
   useEffect(() => {
     if (!editor) return;
@@ -18,19 +17,17 @@ export function AppShell() {
   }, [editor]);
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden">
-      <Toolbar editor={editor} />
-      <div className="flex flex-1 overflow-hidden">
-        {sidebarOpen && (
-          <div className="w-52 border-r shrink-0 overflow-hidden">
-            <SceneNavigator editor={editor} />
-          </div>
-        )}
+    <SidebarProvider>
+      <AppSidebar editor={editor} />
+      <SidebarInset className="flex flex-col overflow-hidden">
+        <div className="flex items-center px-2 py-1 shrink-0">
+          <SidebarTrigger />
+        </div>
         <div className="flex-1 overflow-y-auto bg-background py-2">
           <ScreenplayEditor onEditorReady={setEditor} />
         </div>
-      </div>
-      <StatusBar editor={editor} />
-    </div>
+        <StatusBar editor={editor} />
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
