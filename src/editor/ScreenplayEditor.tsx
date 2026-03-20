@@ -16,6 +16,8 @@ import { PageBreaks } from "./extensions/pageBreaks";
 import { BlockPicker } from "../components/BlockPicker";
 import { useAppStore } from "../store/useAppStore";
 import type { BlockType } from "../types/screenplay";
+import { AutoComplete } from "./extensions/autoComplete";
+import { AutoCompleteDropdown } from "../components/AutoCompleteDropdown";
 
 interface Props {
   onEditorReady?: (editor: Editor) => void;
@@ -38,13 +40,58 @@ export function ScreenplayEditor({ onEditorReady }: Props) {
     setPickerAnchor(null);
   }, []);
 
+  const [acState, setAcState] = useState<{
+    rect: DOMRect;
+    items: string[];
+    select: (text: string) => void;
+    activeIndex: number;
+  } | null>(null);
+
+  // Ref so that handleAcSelect can read the latest acState without a stale closure.
+  const acStateRef = useRef<typeof acState>(null);
+  acStateRef.current = acState;
+
+  const handleAcOpen = useCallback(
+    (rect: DOMRect, items: string[], select: (text: string) => void) => {
+      setAcState({ rect, items, select, activeIndex: 0 });
+    },
+    [],
+  );
+
+  const handleAcClose = useCallback(() => {
+    setAcState(null);
+  }, []);
+
+  const handleAcNavigate = useCallback((dir: "up" | "down") => {
+    setAcState((prev) => {
+      if (!prev) return null;
+      const len = prev.items.length;
+      const next =
+        dir === "down" ? (prev.activeIndex + 1) % len : (prev.activeIndex - 1 + len) % len;
+      return { ...prev, activeIndex: next };
+    });
+  }, []);
+
+  const handleAcSelect = useCallback(() => {
+    const s = acStateRef.current;
+    if (!s) return;
+    s.select(s.items[s.activeIndex]);
+    setAcState(null);
+  }, []);
+
   const editor = useEditor({
     extensions: [
       Document,
       Text,
       History,
       ...allNodes,
-      SmartKeymap,
+      AutoComplete.configure({
+        onOpen: handleAcOpen,
+        onClose: handleAcClose,
+        onNavigate: handleAcNavigate,
+        onSelect: handleAcSelect,
+      }),
+      SmartKeymap,   // must come AFTER AutoComplete
       AutoDetect,
       RevisionMark,
       Placeholder.configure({ placeholder: "Start your script…" }),
@@ -105,6 +152,16 @@ export function ScreenplayEditor({ onEditorReady }: Props) {
         anchor={pickerAnchor}
         onSelect={handleSelect}
         onClose={handleClose}
+      />
+      <AutoCompleteDropdown
+        rect={acState?.rect ?? null}
+        items={acState?.items ?? []}
+        activeIndex={acState?.activeIndex ?? 0}
+        onSelect={(text) => {
+          acState?.select(text);
+          setAcState(null);
+        }}
+        onClose={handleAcClose}
       />
     </div>
   );
