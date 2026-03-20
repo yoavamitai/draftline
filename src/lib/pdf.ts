@@ -1,20 +1,20 @@
 // src/lib/pdf.ts
-import { invoke } from '@tauri-apps/api/core'
-import { WebviewWindow } from '@tauri-apps/api/webviewWindow'
-import { useAppStore } from '../store/useAppStore'
-import { tempDir } from '@tauri-apps/api/path'
+import { invoke } from "@tauri-apps/api/core";
+import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { useAppStore } from "../store/useAppStore";
+import { tempDir } from "@tauri-apps/api/path";
 
-type TNode = { type: string; content?: TNode[]; text?: string; attrs?: Record<string, any> }
+type TNode = { type: string; content?: TNode[]; text?: string; attrs?: Record<string, any> };
 
 function nodeText(node: TNode): string {
-  if (node.text) return node.text
-  return (node.content ?? []).map(nodeText).join('')
+  if (node.text) return node.text;
+  return (node.content ?? []).map(nodeText).join("");
 }
 
 function buildScreenplayHtml(
   fileTitle: string,
   doc: { type: string; content: TNode[] },
-  hasRevisions: boolean
+  hasRevisions: boolean,
 ): string {
   const titlePageHtml = `
 <div class="title-page">
@@ -22,26 +22,42 @@ function buildScreenplayHtml(
     <div class="script-title">${fileTitle}</div>
   </div>
 </div>
-<div style="page-break-after:always"></div>`
+<div style="page-break-after:always"></div>`;
 
-  const body = doc.content.map(node => {
-    const text = nodeText(node).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    const hasRev = hasRevisions && (node.content ?? []).some(
-      (inline: any) => (inline.marks ?? []).some((m: any) => m.type === 'revision')
-    )
-    const asterisk = hasRev ? '<span class="rev-asterisk">*</span>' : ''
-    switch (node.type) {
-      case 'sceneHeading':   return `<div class="scene-heading">${text}${asterisk}</div>`
-      case 'action':         return `<div class="action">${text}${asterisk}</div>`
-      case 'character':      return `<div class="character">${text}</div>`
-      case 'dialogue':       return `<div class="dialogue">${text}${asterisk}</div>`
-      case 'parenthetical':  return `<div class="parenthetical">${text}</div>`
-      case 'transition':     return `<div class="transition">${text}</div>`
-      case 'section':        return ''
-      case 'screenplayNote': return ''
-      default:               return `<div class="action">${text}</div>`
-    }
-  }).join('\n')
+  const body = doc.content
+    .map((node) => {
+      const text = nodeText(node)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+      const hasRev =
+        hasRevisions &&
+        (node.content ?? []).some((inline: any) =>
+          (inline.marks ?? []).some((m: any) => m.type === "revision"),
+        );
+      const asterisk = hasRev ? '<span class="rev-asterisk">*</span>' : "";
+      switch (node.type) {
+        case "sceneHeading":
+          return `<div class="scene-heading">${text}${asterisk}</div>`;
+        case "action":
+          return `<div class="action">${text}${asterisk}</div>`;
+        case "character":
+          return `<div class="character">${text}</div>`;
+        case "dialogue":
+          return `<div class="dialogue">${text}${asterisk}</div>`;
+        case "parenthetical":
+          return `<div class="parenthetical">${text}</div>`;
+        case "transition":
+          return `<div class="transition">${text}</div>`;
+        case "section":
+          return "";
+        case "screenplayNote":
+          return "";
+        default:
+          return `<div class="action">${text}</div>`;
+      }
+    })
+    .join("\n");
 
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8">
@@ -65,24 +81,26 @@ function buildScreenplayHtml(
 ${titlePageHtml}
 ${body}
 <script>window.onload = () => { window.print(); window.close(); }</script>
-</body></html>`
+</body></html>`;
 }
 
 export async function exportToPdf(editor: any) {
-  const { filePath, revisionMode } = useAppStore.getState()
-  const fileTitle = filePath ? filePath.split(/[\\/]/).pop()!.replace('.fountain', '') : 'Screenplay'
-  const html = buildScreenplayHtml(fileTitle, editor.getJSON(), revisionMode)
+  const { filePath, revisionMode } = useAppStore.getState();
+  const fileTitle = filePath
+    ? filePath.split(/[\\/]/).pop()!.replace(".fountain", "")
+    : "Screenplay";
+  const html = buildScreenplayHtml(fileTitle, editor.getJSON(), revisionMode);
 
-  const tmp = await tempDir()
-  const tmpPath = `${tmp}screenplay-print.html`
-  await invoke('write_file', { path: tmpPath, content: html })
+  const tmp = await tempDir();
+  const tmpPath = `${tmp}screenplay-print.html`;
+  await invoke("write_file", { path: tmpPath, content: html });
 
-  const printWindow = new WebviewWindow('pdf-print', {
+  const printWindow = new WebviewWindow("pdf-print", {
     url: `file://${tmpPath}`,
-    title: 'Print Screenplay',
+    title: "Print Screenplay",
     width: 850,
     height: 1100,
     visible: true,
-  })
-  printWindow.once('tauri://error', (e) => console.error('PDF window error:', e))
+  });
+  printWindow.once("tauri://error", (e) => console.error("PDF window error:", e));
 }

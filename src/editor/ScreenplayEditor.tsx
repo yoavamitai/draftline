@@ -21,8 +21,14 @@ export function ScreenplayEditor({ onEditorReady }: Props) {
 
   const editor = useEditor({
     extensions: [
-      Document, Text, History, ...allNodes, SmartKeymap, AutoDetect, RevisionMark,
-      Placeholder.configure({ placeholder: 'Start your script…' }),
+      Document,
+      Text,
+      History,
+      ...allNodes,
+      SmartKeymap,
+      AutoDetect,
+      RevisionMark,
+      Placeholder.configure({ placeholder: "Start your script…" }),
     ],
     content: {
       type: "doc",

@@ -1,35 +1,44 @@
 // src/components/SceneNavigator.tsx
-import { useEffect, useState } from 'react'
-import { ScrollArea } from '@/components/ui/scroll-area'
+import { useEffect, useState } from "react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
-interface Props { editor: any }
+interface Props {
+  editor: any;
+}
 
-interface Scene { title: string; pos: number }
+interface Scene {
+  title: string;
+  pos: number;
+}
 
 export function SceneNavigator({ editor }: Props) {
-  const [scenes, setScenes] = useState<Scene[]>([])
+  const [scenes, setScenes] = useState<Scene[]>([]);
 
   useEffect(() => {
-    if (!editor) return
+    if (!editor) return;
     const update = () => {
-      const found: Scene[] = []
+      const found: Scene[] = [];
       editor.state.doc.descendants((node: any, pos: number) => {
-        if (node.type.name === 'sceneHeading') {
-          found.push({ title: node.textContent, pos })
+        if (node.type.name === "sceneHeading") {
+          found.push({ title: node.textContent, pos });
         }
-      })
-      setScenes(found)
-    }
-    update()
-    editor.on('update', update)
-    return () => editor.off('update', update)
-  }, [editor])
+      });
+      setScenes(found);
+    };
+    update();
+    editor.on("update", update);
+    return () => editor.off("update", update);
+  }, [editor]);
 
   const jumpTo = (pos: number) => {
-    editor.chain().focus().setTextSelection(pos + 1).run()
-    const dom = editor.view.domAtPos(pos + 1)?.node as HTMLElement
-    dom?.scrollIntoView?.({ behavior: 'smooth', block: 'center' })
-  }
+    editor
+      .chain()
+      .focus()
+      .setTextSelection(pos + 1)
+      .run();
+    const dom = editor.view.domAtPos(pos + 1)?.node as HTMLElement;
+    dom?.scrollIntoView?.({ behavior: "smooth", block: "center" });
+  };
 
   return (
     <ScrollArea className="h-full">
@@ -51,5 +60,5 @@ export function SceneNavigator({ editor }: Props) {
         ))}
       </div>
     </ScrollArea>
-  )
+  );
 }

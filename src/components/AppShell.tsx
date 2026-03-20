@@ -1,21 +1,21 @@
 // src/components/AppShell.tsx
-import { useState, useEffect } from 'react'
-import { Toolbar } from './Toolbar'
-import { SceneNavigator } from './SceneNavigator'
-import { StatusBar } from './StatusBar'
-import { ScreenplayEditor } from '../editor/ScreenplayEditor'
-import { useAppStore } from '../store/useAppStore'
-import { startAutoSave } from '../lib/fileManager'
+import { useState, useEffect } from "react";
+import { Toolbar } from "./Toolbar";
+import { SceneNavigator } from "./SceneNavigator";
+import { StatusBar } from "./StatusBar";
+import { ScreenplayEditor } from "../editor/ScreenplayEditor";
+import { useAppStore } from "../store/useAppStore";
+import { startAutoSave } from "../lib/fileManager";
 
 export function AppShell() {
-  const sidebarOpen = useAppStore((s) => s.sidebarOpen)
-  const [editor, setEditor] = useState<any>(null)
+  const sidebarOpen = useAppStore((s) => s.sidebarOpen);
+  const [editor, setEditor] = useState<any>(null);
 
   useEffect(() => {
-    if (!editor) return
-    const interval = startAutoSave(editor)
-    return () => clearInterval(interval)
-  }, [editor])
+    if (!editor) return;
+    const interval = startAutoSave(editor);
+    return () => clearInterval(interval);
+  }, [editor]);
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
@@ -32,5 +32,5 @@ export function AppShell() {
       </div>
       <StatusBar editor={editor} />
     </div>
-  )
+  );
 }
