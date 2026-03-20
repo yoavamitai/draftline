@@ -69,7 +69,7 @@ export function AppSidebar({ editor }: Props) {
   }
 
   return (
-    <Sidebar collapsible="offcanvas">
+    <Sidebar collapsible="offcanvas" variant="inset">
       <SidebarHeader className="gap-2 p-3">
         {editing ? (
           <input
