@@ -1,8 +1,5 @@
 // src/lib/pdf.ts
-import { invoke } from "@tauri-apps/api/core";
-import { WebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useAppStore } from "../store/useAppStore";
-import { tempDir } from "@tauri-apps/api/path";
 import { type TDoc, nodeText } from "./nodeUtils";
 
 function buildScreenplayHtml(fileTitle: string, doc: TDoc, hasRevisions: boolean): string {
@@ -11,8 +8,7 @@ function buildScreenplayHtml(fileTitle: string, doc: TDoc, hasRevisions: boolean
   <div class="title-block">
     <div class="script-title">${fileTitle}</div>
   </div>
-</div>
-<div style="page-break-after:always"></div>`;
+</div>`;
 
   const body = doc.content
     .map((node) => {
@@ -55,8 +51,8 @@ function buildScreenplayHtml(fileTitle: string, doc: TDoc, hasRevisions: boolean
   @import url('https://fonts.googleapis.com/css2?family=Courier+Prime&display=swap');
   @page { size: letter; margin: 1in 1in 1in 1.5in; }
   body { font-family: 'Courier Prime', monospace; font-size: 12pt; line-height: 1.5; color: #000; }
-  .title-page { display:flex; align-items:center; justify-content:center; min-height:9in; text-align:center; }
-  .script-title { font-size:14pt; font-weight:bold; text-transform:uppercase; margin-bottom:2em; }
+  .title-page { text-align:center; padding-top:3.5in; page-break-after:always; }
+  .script-title { font-size:14pt; font-weight:bold; text-transform:uppercase; }
   .scene-heading  { font-weight: bold; text-transform: uppercase; margin: 1em 0 0.25em; position: relative; }
   .action         { margin: 0.25em 0; }
   .character      { margin: 1em 0 0; margin-left: 2.2in; text-transform: uppercase; }
@@ -70,27 +66,34 @@ function buildScreenplayHtml(fileTitle: string, doc: TDoc, hasRevisions: boolean
 </head><body>
 ${titlePageHtml}
 ${body}
-<script>window.onload = () => { window.print(); window.close(); }</script>
 </body></html>`;
 }
 
-export async function exportToPdf(editor: any) {
+export function exportToPdf(editor: any) {
   const { filePath, revisionMode } = useAppStore.getState();
   const fileTitle = filePath
     ? filePath.split(/[\\/]/).pop()!.replace(".fountain", "")
     : "Screenplay";
   const html = buildScreenplayHtml(fileTitle, editor.getJSON(), revisionMode);
 
-  const tmp = await tempDir();
-  const tmpPath = `${tmp}screenplay-print.html`;
-  await invoke("write_file", { path: tmpPath, content: html });
+  // Inject a hidden iframe into the current window and print from it.
+  // This avoids file:// URL restrictions in WebView2.
+  const frame = document.createElement("iframe");
+  frame.style.cssText =
+    "position:fixed;left:-9999px;top:0;width:850px;height:1100px;visibility:hidden";
+  document.body.appendChild(frame);
 
-  const printWindow = new WebviewWindow("pdf-print", {
-    url: `file://${tmpPath}`,
-    title: "Print Screenplay",
-    width: 850,
-    height: 1100,
-    visible: true,
+  frame.addEventListener("load", async () => {
+    // Wait for fonts (Courier Prime via Google Fonts) before printing
+    await frame.contentDocument?.fonts?.ready;
+    frame.contentWindow?.print();
+    setTimeout(() => {
+      if (frame.parentNode) document.body.removeChild(frame);
+    }, 1000);
   });
-  printWindow.once("tauri://error", (e) => console.error("PDF window error:", e));
+
+  const frameDoc = frame.contentDocument!;
+  frameDoc.open();
+  frameDoc.write(html);
+  frameDoc.close();
 }
