@@ -64,7 +64,7 @@ function buildScreenplayHtml(
 </head><body>
 ${titlePageHtml}
 ${body}
-<script>window.onload = () => { window.print(); window.close(); }<\/script>
+<script>window.onload = () => { window.print(); window.close(); }</script>
 </body></html>`
 }
 
