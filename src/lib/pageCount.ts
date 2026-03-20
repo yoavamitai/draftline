@@ -1,12 +1,6 @@
-type TNode = { type: string; content?: TNode[]; text?: string }
-type TDoc = { type: 'doc'; content: TNode[] }
+import { type TNode, type TDoc, nodeText } from './nodeUtils'
 
 const LINES_PER_PAGE = 55
-
-function nodeText(node: TNode): string {
-  if (node.text) return node.text
-  return (node.content ?? []).map(nodeText).join('')
-}
 
 function blockLines(node: TNode): number {
   const text = nodeText(node)

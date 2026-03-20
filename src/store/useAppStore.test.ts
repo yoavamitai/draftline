@@ -1,10 +1,10 @@
 import { describe, it, expect, beforeEach } from 'vitest'
 import { act, renderHook } from '@testing-library/react'
-import { useAppStore } from './useAppStore'
+import { useAppStore, getInitialState } from './useAppStore'
 
 describe('useAppStore', () => {
   beforeEach(() => {
-    useAppStore.setState((useAppStore as any).getInitialState())
+    useAppStore.setState(getInitialState())
   })
 
   it('starts with no file, clean, dark theme', () => {

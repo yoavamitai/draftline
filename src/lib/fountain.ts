@@ -1,12 +1,5 @@
 import { Fountain } from 'fountain-js'
-
-type TNode = { type: string; content?: TNode[]; text?: string; attrs?: Record<string, any> }
-type TDoc = { type: 'doc'; content: TNode[] }
-
-function nodeText(node: TNode): string {
-  if (node.text) return node.text
-  return (node.content ?? []).map(nodeText).join('')
-}
+import { type TNode, type TDoc, nodeText } from './nodeUtils'
 
 export function tiptapToFountain(doc: TDoc): string {
   const lines: string[] = []
