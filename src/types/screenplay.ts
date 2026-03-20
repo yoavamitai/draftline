@@ -34,6 +34,7 @@ export const REVISION_HEX: Record<RevisionColor, string> = {
 
 export interface AppState {
   filePath: string | null;
+  scriptName: string;
   isDirty: boolean;
   theme: "dark" | "light";
   sidebarOpen: boolean;

@@ -5,6 +5,7 @@ import { REVISION_COLOR_SEQUENCE } from "../types/screenplay";
 
 interface AppStore extends AppState {
   setFilePath: (path: string | null) => void;
+  setScriptName: (name: string) => void;
   setDirty: (dirty: boolean) => void;
   toggleTheme: () => void;
   toggleSidebar: () => void;
@@ -14,6 +15,7 @@ interface AppStore extends AppState {
 
 const initialState: AppState = {
   filePath: null,
+  scriptName: "Untitled",
   isDirty: false,
   theme: "dark",
   sidebarOpen: true,
@@ -27,6 +29,7 @@ export const useAppStore = create<AppStore>()(
     (set, get) => ({
       ...initialState,
       setFilePath: (filePath) => set({ filePath }),
+      setScriptName: (scriptName) => set({ scriptName }),
       setDirty: (isDirty) => set({ isDirty }),
       toggleTheme: () => set((s) => ({ theme: s.theme === "dark" ? "light" : "dark" })),
       toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),

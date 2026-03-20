@@ -13,8 +13,10 @@ export async function openFile(editor: any): Promise<boolean> {
   try {
     const content = await invoke<string>("read_file", { path: selected });
     const doc = fountainToTiptap(content);
+    const name = selected.split(/[\\/]/).pop()!.replace(/\.fountain$/i, '')
     editor.commands.setContent(doc);
     useAppStore.getState().setFilePath(selected);
+    useAppStore.getState().setScriptName(name);
     useAppStore.getState().setDirty(false);
     return true;
   } catch (err) {
@@ -29,21 +31,33 @@ export async function saveFile(editor: any, forceSaveAs = false): Promise<boolea
   if (!filePath || forceSaveAs) {
     const selected = await save({
       filters: [{ name: "Fountain", extensions: ["fountain"] }],
-      defaultPath: "Untitled.fountain",
+      defaultPath: `${store.scriptName}.fountain`,
     });
     if (!selected) return false;
     filePath = selected;
   }
   try {
     const content = tiptapToFountain(editor.getJSON());
+    const savedName = filePath.split(/[\\/]/).pop()!.replace(/\.fountain$/i, '')
     await invoke("write_file", { path: filePath, content });
     store.setFilePath(filePath);
+    store.setScriptName(savedName);
     store.setDirty(false);
     return true;
   } catch (err) {
     alert(`Failed to save file: ${err}`);
     return false;
   }
+}
+
+export async function renameScript(newName: string): Promise<void> {
+  const store = useAppStore.getState()
+  store.setScriptName(newName)
+  if (!store.filePath) return
+  const dir = store.filePath.replace(/[\\/][^\\/]+$/, '')
+  const newPath = `${dir}/${newName}.fountain`
+  await invoke('rename_file', { oldPath: store.filePath, newPath })
+  store.setFilePath(newPath)
 }
 
 export function startAutoSave(editor: any) {
