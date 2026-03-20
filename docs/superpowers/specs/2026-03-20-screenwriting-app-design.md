@@ -21,7 +21,7 @@ A focused desktop screenwriting application built with Tauri. The core purpose i
 | Editor core | TipTap (ProseMirror-based) |
 | Fountain I/O | fountain-js |
 | App state | Zustand |
-| PDF export | HTML screenplay template → PDF via Tauri print/headless render |
+| PDF export | HTML screenplay template → PDF via Tauri WebView `print()` API (Windows-primary; cross-platform scope is v2) |
 
 ---
 
@@ -36,7 +36,7 @@ The editor represents a screenplay as a sequence of typed blocks. Each block map
 | Scene Heading | `INT./EXT. LOCATION - TIME` | Full-width, bold, uppercase |
 | Action | Plain paragraph | Full-width, normal weight |
 | Character | `CHARACTER NAME` | Centered, uppercase, ~40% width margin |
-| Dialogue | Dialogue text | Centered block, ~60% width |
+| Dialogue | Dialogue text | Centered block, ~35% page width (~3.5" from left margin, matching industry standard) |
 | Parenthetical | `(beat)` | Centered, narrower than dialogue |
 | Transition | `CUT TO:` | Right-aligned, uppercase |
 | Section | `# Act One` | Styled heading, hidden in PDF |
@@ -52,7 +52,9 @@ Keyboard navigation mirrors Final Draft conventions:
 - **Dialogue → Enter** → Action; **Tab** → new Character
 - **Parenthetical → Enter** → Dialogue
 
-Auto-detection: lines starting with `INT.` or `EXT.` auto-promote to Scene Heading. ALL CAPS lines auto-promote to Character.
+Auto-detection rules:
+- Lines starting with `INT.`, `EXT.`, `INT./EXT.`, or `I/E.` auto-promote to Scene Heading.
+- A line auto-promotes to Character if **all** of the following are true: the entire line is uppercase, the line is ≤ 40 characters, it contains no sentence-ending punctuation (`.`, `?`, `!`), and it is not a Transition (does not end in `:`). Users can always manually override the block type via a right-click context menu or element picker.
 
 ---
 
@@ -97,7 +99,7 @@ Auto-detection: lines starting with `INT.` or `EXT.` auto-promote to Scene Headi
 
 ### Word & Page Count
 - Live count in status bar
-- Page count calculated at ~55 lines per page (standard screenplay)
+- Page count estimated at ~55 lines per page — this is an approximation; actual PDF page count may differ slightly due to rendering. The status bar displays it as an estimate (e.g., "~12 pages").
 - Scene count shown (current scene / total)
 
 ### Revision Mode
@@ -106,7 +108,8 @@ Auto-detection: lines starting with `INT.` or `EXT.` auto-promote to Scene Headi
 - Deleted text shown as strikethrough
 - Revision colors follow WGA standard draft sequence: White → Blue → Pink → Yellow → Green → Goldenrod
 - User can name each revision draft
-- Revision marks stored as Fountain annotations; visible in PDF export
+- Revision marks stored as a custom Fountain note extension. Format: `[[REV:color=blue;op=insert]]…text…[[/REV]]` for insertions, `[[REV:color=blue;op=delete]]…text…[[/REV]]` for deletions. The `color` field maps to the WGA draft color name; `op` is `insert` or `delete`. This is a non-standard extension — plain Fountain parsers will render these as notes and ignore the markup.
+- In PDF export: changed pages include a revision color asterisk (`*`) in the right margin (WGA industry standard). On-screen: insertions are highlighted in the draft color; deletions are shown as strikethrough.
 
 ### Theme
 - Dark and light modes
@@ -138,7 +141,7 @@ User types in TipTap
 
 ## File Format
 
-`.fountain` is stored as plain UTF-8 text per the Fountain spec. Revision annotations stored as Fountain notes (`[[ ]]`) with structured metadata so they round-trip correctly.
+`.fountain` is stored as plain UTF-8 text per the Fountain spec. Revision annotations use a custom note extension (see Revision Mode above). Plain Fountain parsers will treat revision notes as editorial notes and ignore the structured metadata; the app reads the metadata tags to restore revision state on open.
 
 ---
 
@@ -164,4 +167,4 @@ User types in TipTap
 7. Toggle dark/light mode — confirm persists after restart
 8. Toggle scene navigator — confirm collapse/expand and scene jump
 9. Enable revision mode, make edits — confirm highlights and strikethroughs
-10. Verify PDF export reflects revision marks
+10. Enable revision mode, export to PDF — verify that changed pages show a `*` asterisk in the right margin
