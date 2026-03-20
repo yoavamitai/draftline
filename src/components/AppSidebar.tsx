@@ -1,25 +1,13 @@
 // src/components/AppSidebar.tsx
 import { useRef, useState, useEffect } from "react";
 import type { Editor } from "@tiptap/core";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarHeader,
-} from "@/components/ui/sidebar";
+import { Sidebar, SidebarContent, SidebarHeader } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { useAppStore } from "../store/useAppStore";
 import { useShallow } from "zustand/react/shallow";
 import { openFile, saveFile, renameScript } from "../lib/fileManager";
 import { exportToPdf } from "../lib/pdf";
-import {
-  FolderOpen,
-  Save,
-  SaveAll,
-  FileDown,
-  GitBranch,
-  Sun,
-  Moon,
-} from "lucide-react";
+import { FolderOpen, Save, SaveAll, FileDown, GitBranch, Sun, Moon } from "lucide-react";
 import { SceneNavigator } from "./SceneNavigator";
 
 interface Props {
@@ -41,7 +29,10 @@ export function AppSidebar({ editor }: Props) {
     );
 
   const displayName = filePath
-    ? filePath.split(/[\\/]/).pop()!.replace(/\.fountain$/i, "")
+    ? filePath
+        .split(/[\\/]/)
+        .pop()!
+        .replace(/\.fountain$/i, "")
     : scriptName;
 
   const [editing, setEditing] = useState(false);
@@ -105,10 +96,20 @@ export function AppSidebar({ editor }: Props) {
           <Button variant="ghost" size="icon" title="Save" onClick={() => saveFile(editor)}>
             <Save className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" title="Save As" onClick={() => saveFile(editor, true)}>
+          <Button
+            variant="ghost"
+            size="icon"
+            title="Save As"
+            onClick={() => saveFile(editor, true)}
+          >
             <SaveAll className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" title="Export PDF" onClick={() => exportToPdf(editor)}>
+          <Button
+            variant="ghost"
+            size="icon"
+            title="Export PDF"
+            onClick={() => exportToPdf(editor)}
+          >
             <FileDown className="h-4 w-4" />
           </Button>
           <Button
@@ -119,7 +120,12 @@ export function AppSidebar({ editor }: Props) {
           >
             <GitBranch className="h-4 w-4" />
           </Button>
-          <Button variant="ghost" size="icon" onClick={toggleTheme}>
+          <Button
+            variant="ghost"
+            size="icon"
+            title={theme === "dark" ? "Switch to light" : "Switch to dark"}
+            onClick={toggleTheme}
+          >
             {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
           </Button>
         </div>
