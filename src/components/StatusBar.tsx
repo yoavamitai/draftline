@@ -1,9 +1,10 @@
 // src/components/StatusBar.tsx
 import { useEffect, useState } from "react";
+import type { Editor } from "@tiptap/core";
 import { estimatePageCount, estimateWordCount } from "../lib/pageCount";
 
 interface Props {
-  editor: any;
+  editor: Editor | null;
 }
 
 export function StatusBar({ editor }: Props) {
