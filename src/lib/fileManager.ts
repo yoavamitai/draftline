@@ -1,42 +1,60 @@
 // src/lib/fileManager.ts
-import { invoke } from '@tauri-apps/api/core'
-import { open, save } from '@tauri-apps/plugin-dialog'
-import { fountainToTiptap, tiptapToFountain } from './fountain'
-import { useAppStore } from '../store/useAppStore'
+import { invoke } from "@tauri-apps/api/core";
+import { open, save } from "@tauri-apps/plugin-dialog";
+import { fountainToTiptap, tiptapToFountain } from "./fountain";
+import { useAppStore } from "../store/useAppStore";
 
-export async function openFile(editor: any) {
+export async function openFile(editor: any): Promise<boolean> {
   const selected = await open({
-    filters: [{ name: 'Fountain', extensions: ['fountain'] }],
+    filters: [{ name: "Fountain", extensions: ["fountain"] }],
     multiple: false,
-  })
-  if (!selected || Array.isArray(selected)) return
-  const content = await invoke<string>('read_file', { path: selected })
-  const doc = fountainToTiptap(content)
-  editor.commands.setContent(doc)
-  useAppStore.getState().setFilePath(selected)
-  useAppStore.getState().setDirty(false)
+  });
+  if (!selected || Array.isArray(selected)) return false;
+  try {
+    const content = await invoke<string>("read_file", { path: selected });
+    const doc = fountainToTiptap(content);
+    editor.commands.setContent(doc);
+    useAppStore.getState().setFilePath(selected);
+    useAppStore.getState().setDirty(false);
+    return true;
+  } catch (err) {
+    alert(`Failed to open file: ${err}`);
+    return false;
+  }
 }
 
-export async function saveFile(editor: any, forceSaveAs = false) {
-  const store = useAppStore.getState()
-  let filePath = store.filePath
+export async function saveFile(editor: any, forceSaveAs = false): Promise<boolean> {
+  const store = useAppStore.getState();
+  let filePath = store.filePath;
   if (!filePath || forceSaveAs) {
     const selected = await save({
-      filters: [{ name: 'Fountain', extensions: ['fountain'] }],
-      defaultPath: 'Untitled.fountain',
-    })
-    if (!selected) return
-    filePath = selected
-    store.setFilePath(filePath)
+      filters: [{ name: "Fountain", extensions: ["fountain"] }],
+      defaultPath: "Untitled.fountain",
+    });
+    if (!selected) return false;
+    filePath = selected;
   }
-  const content = tiptapToFountain(editor.getJSON())
-  await invoke('write_file', { path: filePath, content })
-  store.setDirty(false)
+  try {
+    const content = tiptapToFountain(editor.getJSON());
+    await invoke("write_file", { path: filePath, content });
+    store.setFilePath(filePath);
+    store.setDirty(false);
+    return true;
+  } catch (err) {
+    alert(`Failed to save file: ${err}`);
+    return false;
+  }
 }
 
 export function startAutoSave(editor: any) {
   return setInterval(async () => {
-    const { filePath, isDirty } = useAppStore.getState()
-    if (filePath && isDirty) await saveFile(editor)
-  }, 30_000)
+    const { filePath, isDirty } = useAppStore.getState();
+    if (filePath && isDirty) {
+      try {
+        await saveFile(editor);
+      } catch (err) {
+        console.error("Auto-save failed:", err);
+      }
+    }
+  }, 30_000);
 }
