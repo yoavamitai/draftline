@@ -24,7 +24,23 @@ export function ScreenplayEditor({ onEditorReady }: Props) {
       type: "doc",
       content: [{ type: "action", content: [] }],
     },
-    onUpdate: () => setDirty(true),
+    onUpdate({ editor, transaction }) {
+      setDirty(true);
+      const { revisionMode, revisionColor } = useAppStore.getState();
+      if (!revisionMode || !transaction.docChanged) return;
+      transaction.steps.forEach((step: any) => {
+        if (step.slice?.content?.size > 0) {
+          const from = step.from;
+          const to = step.from + step.slice.content.size;
+          editor
+            .chain()
+            .setTextSelection({ from, to })
+            .setMark("revision", { color: revisionColor, op: "insert" })
+            .setTextSelection(to)
+            .run();
+        }
+      });
+    },
   });
 
   // Store editor ref for stable cross-component access
