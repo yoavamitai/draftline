@@ -1,0 +1,5 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/crates/oxc_linter/schema/oxlintrc.json",
+  "rules": {},
+  "ignorePatterns": ["node_modules", "dist", "src-tauri/target"]
+}
