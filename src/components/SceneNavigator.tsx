@@ -40,9 +40,9 @@ export function SceneNavigator({ editor }: Props) {
         {scenes.length === 0 && (
           <p className="text-xs text-muted-foreground px-2 py-1">No scenes yet</p>
         )}
-        {scenes.map((s, i) => (
+        {scenes.map((s) => (
           <button
-            key={i}
+            key={`${s.title}-${s.pos}`}
             onClick={() => jumpTo(s.pos)}
             className="w-full text-left text-xs px-2 py-1 rounded hover:bg-accent truncate"
           >
