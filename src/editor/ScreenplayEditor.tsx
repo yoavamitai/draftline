@@ -3,6 +3,7 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import { Document } from "@tiptap/extension-document";
 import { Text } from "@tiptap/extension-text";
 import { History } from "@tiptap/extension-history";
+import { Placeholder } from "@tiptap/extension-placeholder";
 import { useEffect, useRef } from "react";
 import type { Editor } from "@tiptap/core";
 import { allNodes } from "./extensions/nodes";
@@ -19,7 +20,10 @@ export function ScreenplayEditor({ onEditorReady }: Props) {
   const setDirty = useAppStore((s) => s.setDirty);
 
   const editor = useEditor({
-    extensions: [Document, Text, History, ...allNodes, SmartKeymap, AutoDetect, RevisionMark],
+    extensions: [
+      Document, Text, History, ...allNodes, SmartKeymap, AutoDetect, RevisionMark,
+      Placeholder.configure({ placeholder: 'Start your script…' }),
+    ],
     content: {
       type: "doc",
       content: [{ type: "action", content: [] }],
