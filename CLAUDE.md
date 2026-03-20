@@ -33,6 +33,9 @@ A Tauri desktop screenwriting application with a WYSIWYG screenplay editor.
 ## Tauri Gotchas
 
 - **Capabilities gate all plugin IPC**: `src-tauri/capabilities/default.json` must list permissions for every plugin used. Missing entry = silent failure (no error, dialog just doesn't open). Current permissions: `core:default`, `opener:default`, `dialog:default`, `core:webview:allow-create-webview-window`.
+- **`decorations: false` requires a full Tauri restart** — HMR will not pick up changes to `tauri.conf.json`. Custom window controls need: `core:window:allow-start-dragging`, `allow-close`, `allow-minimize`, `allow-toggle-maximize` in capabilities.
+- **Custom title bar must use `relative z-50`**: the shadcn Sidebar panel is `position: fixed; inset-y-0; z-index: 10` — it starts at viewport top and covers the title bar. Any element that must appear above it needs `z-index > 10`.
+- **Use `<div role="button">` for custom-styled buttons** — Tailwind preflight resets `<button>` background/padding; inline styles alone are insufficient to reliably override it.
 - **`@tiptap/suggestion` is not a transitive dep** in this project — add it explicitly to `package.json` if needed (`^3.20.4`).
 - **Dark mode**: `.dark` class is toggled on `<html>` in `App.tsx` via `useEffect`. Tailwind dark variant is `&:is(.dark *)`. The `.screenplay-page` element must have explicit `color: var(--foreground)` — it does not reliably inherit in all WebView contexts.
 
