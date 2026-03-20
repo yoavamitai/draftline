@@ -17,9 +17,9 @@ export function AppShell() {
   }, [editor]);
 
   return (
-    <SidebarProvider>
+    <SidebarProvider className="h-full">
       <AppSidebar editor={editor} />
-      <SidebarInset className="flex flex-col overflow-hidden">
+      <SidebarInset className="relative flex flex-col overflow-hidden">
         <div className="flex items-center px-2 py-1 shrink-0">
           <SidebarTrigger />
         </div>

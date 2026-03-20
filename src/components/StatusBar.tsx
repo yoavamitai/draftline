@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import type { Editor } from "@tiptap/core";
 import { estimatePageCount, estimateWordCount } from "../lib/pageCount";
+import { Badge } from "@/components/ui/badge";
 
 interface Props {
   editor: Editor | null;
@@ -15,14 +16,12 @@ export function StatusBar({ editor }: Props) {
   useEffect(() => {
     if (!editor) return;
 
-    // Recalculate pages + words only when the document content changes.
     const onDocUpdate = () => {
       const doc = editor.getJSON();
       setWords(estimateWordCount(doc));
       setPages(estimatePageCount(doc));
     };
 
-    // Recalculate current scene position on any selection or doc change.
     const onSelectionUpdate = () => {
       const { $from } = editor.state.selection;
       let currentScene = 0;
@@ -49,14 +48,12 @@ export function StatusBar({ editor }: Props) {
   }, [editor]);
 
   return (
-    <div className="h-7 border-t flex items-center px-4 gap-4 text-xs text-muted-foreground shrink-0">
-      <span>
+    <div className="absolute bottom-4 right-4 z-10 flex gap-1.5">
+      <Badge variant="secondary">
         ~{pages} {pages === 1 ? "page" : "pages"}
-      </span>
-      <span className="text-border">|</span>
-      <span>{words} words</span>
-      <span className="text-border">|</span>
-      <span>{sceneInfo}</span>
+      </Badge>
+      <Badge variant="secondary">{words} words</Badge>
+      <Badge variant="secondary">{sceneInfo}</Badge>
     </div>
   );
 }
