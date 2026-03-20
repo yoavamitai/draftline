@@ -13,8 +13,9 @@
     "windows": [
       {
         "title": "Draftline",
-        "width": 1200,
-        "height": 1000
+        "width": 1280,
+        "height": 720,
+        "center": true
       }
     ],
     "security": {
