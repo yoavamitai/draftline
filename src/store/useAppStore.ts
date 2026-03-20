@@ -8,7 +8,6 @@ interface AppStore extends AppState {
   setScriptName: (name: string) => void;
   setDirty: (dirty: boolean) => void;
   toggleTheme: () => void;
-  toggleSidebar: () => void;
   toggleRevisionMode: () => void;
   nextRevisionDraft: (name: string) => void;
 }
@@ -18,7 +17,6 @@ const initialState: AppState = {
   scriptName: "Untitled",
   isDirty: false,
   theme: "dark",
-  sidebarOpen: true,
   revisionMode: false,
   revisionColor: "white",
   revisionDraftName: "White",
@@ -32,7 +30,6 @@ export const useAppStore = create<AppStore>()(
       setScriptName: (scriptName) => set({ scriptName }),
       setDirty: (isDirty) => set({ isDirty }),
       toggleTheme: () => set((s) => ({ theme: s.theme === "dark" ? "light" : "dark" })),
-      toggleSidebar: () => set((s) => ({ sidebarOpen: !s.sidebarOpen })),
       toggleRevisionMode: () => set((s) => ({ revisionMode: !s.revisionMode })),
       nextRevisionDraft: (name) => {
         const idx = REVISION_COLOR_SEQUENCE.indexOf(get().revisionColor);
@@ -44,7 +41,7 @@ export const useAppStore = create<AppStore>()(
     }),
     {
       name: "screenplay-app-store",
-      partialize: (s) => ({ theme: s.theme, sidebarOpen: s.sidebarOpen }),
+      partialize: (s) => ({ theme: s.theme }),
     },
   ),
 );

@@ -37,7 +37,6 @@ export interface AppState {
   scriptName: string;
   isDirty: boolean;
   theme: "dark" | "light";
-  sidebarOpen: boolean;
   revisionMode: boolean;
   revisionColor: RevisionColor;
   revisionDraftName: string;
