@@ -30,6 +30,12 @@ A Tauri desktop screenwriting application with a WYSIWYG screenplay editor.
 - Use `@tauri-apps/api/core` for `invoke`, `@tauri-apps/plugin-dialog` for file dialogs (Tauri v2)
 - shadcn/ui components live in `src/components/ui/` — do not hand-roll UI primitives
 
+## Tauri Gotchas
+
+- **Capabilities gate all plugin IPC**: `src-tauri/capabilities/default.json` must list permissions for every plugin used. Missing entry = silent failure (no error, dialog just doesn't open). Current permissions: `core:default`, `opener:default`, `dialog:default`, `core:webview:allow-create-webview-window`.
+- **`@tiptap/suggestion` is not a transitive dep** in this project — add it explicitly to `package.json` if needed (`^3.20.4`).
+- **Dark mode**: `.dark` class is toggled on `<html>` in `App.tsx` via `useEffect`. Tailwind dark variant is `&:is(.dark *)`. The `.screenplay-page` element must have explicit `color: var(--foreground)` — it does not reliably inherit in all WebView contexts.
+
 ## Commands
 
 ```bash
