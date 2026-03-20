@@ -3,7 +3,7 @@ import { Extension } from '@tiptap/core'
 import { Plugin, PluginKey } from '@tiptap/pm/state'
 
 const SCENE_HEADING_RE = /^(INT\.|EXT\.|INT\.\/EXT\.|I\/E\.)/i
-const CHARACTER_RE = /^[A-Z][A-Z0-9 '\-()\\/]{0,38}$/
+const CHARACTER_RE = /^[A-Z][A-Z0-9 '\-()\\/]{0,39}$/
 
 export const AutoDetect = Extension.create({
   name: 'autoDetect',
