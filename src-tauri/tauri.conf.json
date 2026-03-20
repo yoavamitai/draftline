@@ -15,7 +15,8 @@
         "title": "Draftline",
         "width": 1280,
         "height": 720,
-        "center": true
+        "center": true,
+        "decorations": false
       }
     ],
     "security": {
