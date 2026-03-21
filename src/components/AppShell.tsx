@@ -6,6 +6,7 @@ import { AppSidebar } from "./AppSidebar";
 import { StatusBar } from "./StatusBar";
 import { TitleBar } from "./TitleBar";
 import { ScreenplayEditor } from "../editor/ScreenplayEditor";
+import { TitlePage } from "./TitlePage";
 import { startAutoSave } from "../lib/fileManager";
 
 export function AppShell() {
@@ -22,11 +23,15 @@ export function AppShell() {
       <SidebarProvider className="flex-1 min-h-0">
         <AppSidebar editor={editor} />
         <SidebarInset className="relative flex flex-col overflow-hidden">
-          <div className="flex items-center justify-between px-2 py-1 shrink-0" data-tauri-drag-region>
+          <div
+            className="flex items-center justify-between px-2 py-1 shrink-0"
+            data-tauri-drag-region
+          >
             <SidebarTrigger />
             <TitleBar />
           </div>
           <div className="flex-1 overflow-y-auto bg-background py-2">
+            <TitlePage editor={editor} />
             <ScreenplayEditor onEditorReady={setEditor} />
           </div>
           <StatusBar editor={editor} />
