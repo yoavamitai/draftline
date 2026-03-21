@@ -41,3 +41,12 @@ export interface AppState {
   revisionColor: RevisionColor;
   revisionDraftName: string;
 }
+
+export interface TitlePageField {
+  key: string;       // e.g. "Title", "Author", "Draft date"
+  values: string[];  // one newline-free string per line
+}
+
+export interface TitlePageData {
+  fields: TitlePageField[];
+}
