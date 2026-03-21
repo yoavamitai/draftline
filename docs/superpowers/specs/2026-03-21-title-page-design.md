@@ -39,7 +39,7 @@ titlePage: TitlePageData;                                          // initial: {
 setTitlePageFields: (fields: TitlePageField[]) => void;
 updateTitlePageField: (index: number, field: TitlePageField) => void;
 addTitlePageField: (field: TitlePageField) => void;
-removeTitlePageField: (index: number) => void;
+removeTitlePageField: (key: string) => void;                  // remove by key
 clearTitlePage: () => void;                                        // resets to { fields: [] }
 ```
 
