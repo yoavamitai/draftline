@@ -152,6 +152,7 @@ export const AutoComplete = Extension.create<AutoCompleteOptions>({
                     .focus()
                     .command(({ tr, state }) => {
                       const { $from: f } = state.selection;
+                      if (f.parent.type.name !== "sceneHeading") return false;
                       // Use $from.start() / $from.end() — NOT selection.from / selection.to.
                       tr.insertText(text, f.start(), f.end());
                       return true;
@@ -168,6 +169,7 @@ export const AutoComplete = Extension.create<AutoCompleteOptions>({
                     .focus()
                     .command(({ tr, state }) => {
                       const { $from: f } = state.selection;
+                      if (f.parent.type.name !== blockType) return false;
                       tr.insertText(text, f.start(), f.end());
                       return true;
                     })
