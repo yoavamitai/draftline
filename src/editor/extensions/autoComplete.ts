@@ -1,7 +1,11 @@
 // src/editor/extensions/autoComplete.ts
 import { Extension } from "@tiptap/core";
 import { Plugin, PluginKey } from "@tiptap/pm/state";
-import { filterSuggestions } from "../../lib/autocomplete";
+import {
+  filterSuggestions,
+  getSceneHeadingPrefixSuggestions,
+  getTimeOfDaySuggestions,
+} from "../../lib/autocomplete";
 import type { DocEntry } from "../../lib/autocomplete";
 
 const autoCompleteKey = new PluginKey("autoComplete");
@@ -110,7 +114,67 @@ export const AutoComplete = Extension.create<AutoCompleteOptions>({
                 }
               });
 
-              const items = filterSuggestions(entries, currentText, currentBlockStart);
+              // --- Mode branching for scene headings ---
+              let items: string[];
+              let select: (text: string) => void;
+
+              if (blockType === "sceneHeading" && currentText.includes(" - ")) {
+                // TIME MODE: cursor is in the time-of-day portion (after " - ")
+                const dashIdx = currentText.lastIndexOf(" - ");
+                const timeQuery = currentText.slice(dashIdx + 3); // text after " - "
+                items = getTimeOfDaySuggestions(timeQuery);
+
+                // select replaces only the suffix (everything after " - "), re-reading state at call time.
+                select = (text: string) => {
+                  ext.editor
+                    .chain()
+                    .focus()
+                    .command(({ tr, state }) => {
+                      const { $from: f } = state.selection;
+                      if (f.parent.type.name !== "sceneHeading") return false;
+                      const blockText = f.parent.textContent;
+                      const idx = blockText.lastIndexOf(" - ");
+                      if (idx === -1) return false; // block was edited — no-op
+                      const preserved = blockText.slice(0, idx + 3); // keep up to and including " - "
+                      tr.insertText(preserved + text, f.start(), f.end());
+                      return true;
+                    })
+                    .run();
+                };
+              } else if (blockType === "sceneHeading") {
+                // PREFIX MODE: cursor is in the prefix/location portion (no " - " yet)
+                items = getSceneHeadingPrefixSuggestions(currentText, entries, currentBlockStart);
+
+                // select replaces the full block text (existing behavior).
+                select = (text: string) => {
+                  ext.editor
+                    .chain()
+                    .focus()
+                    .command(({ tr, state }) => {
+                      const { $from: f } = state.selection;
+                      // Use $from.start() / $from.end() — NOT selection.from / selection.to.
+                      tr.insertText(text, f.start(), f.end());
+                      return true;
+                    })
+                    .run();
+                };
+              } else {
+                // CHARACTER MODE (and any future block types): document-based suggestions only.
+                items = filterSuggestions(entries, currentText, currentBlockStart);
+
+                select = (text: string) => {
+                  ext.editor
+                    .chain()
+                    .focus()
+                    .command(({ tr, state }) => {
+                      const { $from: f } = state.selection;
+                      tr.insertText(text, f.start(), f.end());
+                      return true;
+                    })
+                    .run();
+                };
+              }
+              // --- End mode branching ---
 
               if (items.length === 0) {
                 if (ext.storage.isOpen) {
@@ -124,25 +188,12 @@ export const AutoComplete = Extension.create<AutoCompleteOptions>({
               // view.domAtPos(pos + 1) resolves to a position inside the node's content
               // and is more reliable than view.nodeDOM() for block-level elements.
               const domResult = view.domAtPos(currentBlockStart + 1);
-              const blockDom = domResult.node instanceof HTMLElement
-                ? domResult.node
-                : (domResult.node.parentElement as HTMLElement | null);
+              const blockDom =
+                domResult.node instanceof HTMLElement
+                  ? domResult.node
+                  : (domResult.node.parentElement as HTMLElement | null);
               if (!blockDom) return;
               const rect = blockDom.getBoundingClientRect();
-
-              // select replaces the current block's full text content.
-              // Uses editor.chain().focus() so the editor regains focus after a mouse-click selection.
-              // Reads state at call time (always current — no stale closure).
-              const select = (text: string) => {
-                ext.editor.chain().focus().command(({ tr, state }) => {
-                  const { $from: f } = state.selection;
-                  // Use $from.start() / $from.end() — NOT selection.from / selection.to.
-                  // selection.from/to reflect cursor position within the block;
-                  // $from.start() / $from.end() always span the full block content.
-                  tr.insertText(text, f.start(), f.end());
-                  return true;
-                }).run();
-              };
 
               ext.storage.isOpen = true;
               ext.options.onOpen(rect, items, select);
