@@ -29,8 +29,10 @@ TIME_OF_DAY = ['DAY', 'NIGHT', 'DAWN', 'DUSK', 'CONTINUOUS', 'SAME', 'LATER', 'M
 ### `getSceneHeadingPrefixSuggestions(query, docEntries, excludePos, limit = 8)`
 
 - Filters `SCENE_HEADING_PREFIXES` by case-insensitive prefix match against `query` → `staticMatches`
+  - Because the filter checks whether a static candidate *starts with* the query, static suggestions only appear while the user is still typing the prefix itself (e.g. `I`, `IN`, `INT`, `INT.`). Once the user types a space after `INT.` and begins the location name, no static prefix will match — this is intentional.
 - Calls `filterSuggestions(docEntries, query, excludePos, limit)` for doc-derived entries → `docMatches`
-- Merges: `staticMatches` first, then any `docMatches` not already in `staticMatches` (dedup by case-insensitive exact string equality; when a collision occurs the static form is kept)
+- Merges: `staticMatches` first, then any `docMatches` not already in `staticMatches`
+  - Dedup uses case-insensitive exact string equality. In practice, collisions only occur when a doc entry consists solely of a bare prefix (e.g. `INT.` with no location). The static form is kept in that case.
 - Slices merged array to `limit` before returning
 
 ### `getTimeOfDaySuggestions(query)`
@@ -49,10 +51,11 @@ When `blockType === 'sceneHeading'`:
 
 **Time mode** (block contains ` - `):
 - Extracts query as text after last ` - ` (may be empty — see `getTimeOfDaySuggestions` above)
-- The existing early-exit guard (`!currentText.trim()`) fires before mode detection; it is harmless in time mode because a block containing ` - ` is never empty
+- The plugin's two early-exit guards (`!currentText.trim()` and `items.length === 0`) both apply normally in time mode: the first never fires because a block with ` - ` is non-empty; the second fires as usual when `getTimeOfDaySuggestions` returns no matches.
 - Calls `getTimeOfDaySuggestions(query)`
 - `select(text)` replaces only the suffix — keeps text up to and including ` - `, appends the chosen time value
 - **The `select` closure must re-read `state` at call time** (not close over `currentText`). Inside the `command()` callback, read `$from.parent.textContent` fresh, then recompute the ` - ` split index from that freshly-read content before constructing the replacement string. Do not use any offset captured from `currentText` at `onOpen` time. This avoids stale closure bugs (see commit `88fb33e`).
+- **Fallback when ` - ` is absent at call time**: if the freshly-read block text no longer contains ` - ` (user edited the block between `onOpen` and `select`), the command is a no-op — do not insert anything.
 
 `character` blocks continue to use `filterSuggestions` unchanged.
 
