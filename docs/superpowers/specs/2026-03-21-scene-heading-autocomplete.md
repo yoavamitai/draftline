@@ -26,16 +26,18 @@ TIME_OF_DAY = ['DAY', 'NIGHT', 'DAWN', 'DUSK', 'CONTINUOUS', 'SAME', 'LATER', 'M
 
 ## Pure Functions (`src/lib/autocomplete.ts`)
 
-### `getSceneHeadingPrefixSuggestions(query, docEntries, excludePos)`
+### `getSceneHeadingPrefixSuggestions(query, docEntries, excludePos, limit = 8)`
 
-- Filters `SCENE_HEADING_PREFIXES` by prefix match against `query`
-- Calls existing `filterSuggestions` for doc-derived entries
-- Returns static matches first, then doc matches — deduplicated
+- Filters `SCENE_HEADING_PREFIXES` by case-insensitive prefix match against `query`
+- Calls existing `filterSuggestions(docEntries, query, excludePos, limit)` for doc-derived entries
+- Returns static matches first, then doc matches — deduplicated by case-insensitive exact string equality
+- Total result is capped at `limit` (default 8), applied after merging both sources
 
 ### `getTimeOfDaySuggestions(query)`
 
 - Filters `TIME_OF_DAY` by case-insensitive prefix match against `query`
-- Returns matched items; empty array if nothing matches
+- If `query` is empty (user typed ` - ` and nothing after), returns the full `TIME_OF_DAY` list
+- Returns empty array only when `query` is non-empty and nothing matches
 
 ## Plugin Changes (`src/editor/extensions/autoComplete.ts`)
 
@@ -46,9 +48,10 @@ When `blockType === 'sceneHeading'`:
 - `select(text)` replaces the entire block text (existing behavior)
 
 **Time mode** (block contains ` - `):
-- Extracts query as text after last ` - `
+- Extracts query as text after last ` - ` (may be empty — see `getTimeOfDaySuggestions` above)
 - Calls `getTimeOfDaySuggestions(query)`
 - `select(text)` replaces only the suffix — keeps text up to and including ` - `, appends the chosen time value
+- **The `select` closure must re-read `state` at call time** (not close over `currentText`). Use the same pattern as the existing `select` in the plugin — read `$from.parent.textContent` inside the `command()` callback — to avoid stale closure bugs (see commit `88fb33e`).
 
 `character` blocks continue to use `filterSuggestions` unchanged.
 
