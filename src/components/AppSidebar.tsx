@@ -9,7 +9,6 @@ import { openFile, saveFile, renameScript, newFile } from "../lib/fileManager";
 import { exportToPdf } from "../lib/pdf";
 import { FolderOpen, Save, SaveAll, FileDown, GitBranch, Sun, Moon, FilePlus } from "lucide-react";
 import { SceneNavigator } from "./SceneNavigator";
-import { Input } from '@/components/ui/input';
 
 interface Props {
   editor: Editor | null;
