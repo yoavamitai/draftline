@@ -5,10 +5,11 @@ import { Sidebar, SidebarContent, SidebarHeader } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button";
 import { useAppStore } from "../store/useAppStore";
 import { useShallow } from "zustand/react/shallow";
-import { openFile, saveFile, renameScript } from "../lib/fileManager";
+import { openFile, saveFile, renameScript, newFile } from "../lib/fileManager";
 import { exportToPdf } from "../lib/pdf";
-import { FolderOpen, Save, SaveAll, FileDown, GitBranch, Sun, Moon } from "lucide-react";
+import { FolderOpen, Save, SaveAll, FileDown, GitBranch, Sun, Moon, FilePlus } from "lucide-react";
 import { SceneNavigator } from "./SceneNavigator";
+import { Input } from '@/components/ui/input';
 
 interface Props {
   editor: Editor | null;
@@ -90,6 +91,9 @@ export function AppSidebar({ editor }: Props) {
           </span>
         )}
         <div className="flex flex-wrap gap-1">
+          <Button variant="ghost" size="icon" title="New" onClick={() => newFile(editor)}>
+            <FilePlus className="h-4 w-4" />
+          </Button>
           <Button variant="ghost" size="icon" title="Open" onClick={() => openFile(editor)}>
             <FolderOpen className="h-4 w-4" />
           </Button>

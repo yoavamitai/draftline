@@ -43,7 +43,7 @@ export async function saveFile(editor: any, forceSaveAs = false): Promise<boolea
     filePath = selected;
   }
   try {
-    const content = tiptapToFountain(editor.getJSON());
+    const content = tiptapToFountain(editor.getJSON(), store.titlePage);
     const savedName = filePath
       .split(/[\\/]/)
       .pop()!
@@ -67,6 +67,18 @@ export async function renameScript(newName: string): Promise<void> {
   const newPath = `${dir}/${newName}.fountain`;
   await invoke("rename_file", { oldPath: store.filePath, newPath });
   store.setFilePath(newPath);
+}
+
+export function newFile(editor: any): void {
+  editor.commands.setContent({
+    type: "doc",
+    content: [{ type: "action", content: [] }],
+  });
+  const store = useAppStore.getState();
+  store.clearTitlePage();
+  store.setFilePath(null);
+  store.setScriptName("Untitled");
+  store.setDirty(false);
 }
 
 export function startAutoSave(editor: any) {
