@@ -2,43 +2,64 @@ import { Fountain } from "fountain-js";
 import { type TNode, type TDoc, nodeText } from "./nodeUtils";
 import type { TitlePageData, TitlePageField } from "../types/screenplay";
 
-export function tiptapToFountain(doc: TDoc): string {
-  const lines: string[] = [];
+export function tiptapToFountain(doc: TDoc, titlePage?: TitlePageData): string {
+  // Build title block
+  let titleBlock = "";
+  if (titlePage && titlePage.fields.length > 0) {
+    const lines: string[] = [];
+    for (const field of titlePage.fields) {
+      const nonEmpty = field.values.filter((v) => v.trim() !== "");
+      if (nonEmpty.length === 0) continue;
+      if (nonEmpty.length === 1) {
+        lines.push(`${field.key}: ${nonEmpty[0]}`);
+      } else {
+        lines.push(`${field.key}:`);
+        for (const v of nonEmpty) {
+          lines.push(`    ${v}`);
+        }
+      }
+    }
+    if (lines.length > 0) {
+      titleBlock = lines.join("\n") + "\n\n";
+    }
+  }
+
+  // Build script body (existing logic unchanged, .trim() applied to body only)
+  const bodyLines: string[] = [];
   for (const node of doc.content) {
     const text = nodeText(node);
     switch (node.type) {
       case "sceneHeading":
-        lines.push("", text.toUpperCase(), "");
+        bodyLines.push("", text.toUpperCase(), "");
         break;
       case "action":
-        lines.push(text, "");
+        bodyLines.push(text, "");
         break;
       case "character":
-        lines.push("", text.toUpperCase());
+        bodyLines.push("", text.toUpperCase());
         break;
       case "dialogue":
-        lines.push(text, "");
+        bodyLines.push(text, "");
         break;
       case "parenthetical":
-        lines.push(`(${text.replace(/^\(|\)$/g, "")})`);
+        bodyLines.push(`(${text.replace(/^\(|\)$/g, "")})`);
         break;
       case "transition":
-        lines.push("", `> ${text}`, "");
+        bodyLines.push("", `> ${text}`, "");
         break;
       case "section": {
         const level = node.attrs?.level ?? 1;
-        lines.push("#".repeat(level) + " " + text);
+        bodyLines.push("#".repeat(level) + " " + text);
         break;
       }
       case "screenplayNote":
-        lines.push(`[[ ${text} ]]`);
+        bodyLines.push(`[[ ${text} ]]`);
         break;
     }
   }
-  return lines
-    .join("\n")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
+  const body = bodyLines.join("\n").replace(/\n{3,}/g, "\n\n").trim();
+
+  return titleBlock + body;
 }
 
 const TITLE_KEY_RE = /^([A-Za-z][A-Za-z0-9 ]*):(.*)$/;

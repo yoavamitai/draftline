@@ -103,3 +103,101 @@ describe("title page — parsing (fountainToTiptap)", () => {
     expect(titlePage.fields).toContainEqual({ key: "Notes", values: ["WGA #12345"] });
   });
 });
+
+describe("title page — serialization (tiptapToFountain)", () => {
+  const EMPTY_DOC = {
+    type: "doc" as const,
+    content: [{ type: "action", content: [{ type: "text", text: "Action line." }] }],
+  };
+
+  it("produces no title block when titlePage is omitted", () => {
+    const result = tiptapToFountain(EMPTY_DOC);
+    expect(result).not.toContain("Title:");
+    expect(result.trimStart()[0]).not.toBe(" ");
+  });
+
+  it("produces no title block when titlePage has empty fields", () => {
+    const result = tiptapToFountain(EMPTY_DOC, { fields: [] });
+    expect(result).not.toContain("Title:");
+  });
+
+  it("produces no title block when all field values are whitespace-only", () => {
+    const result = tiptapToFountain(EMPTY_DOC, {
+      fields: [{ key: "Title", values: ["   "] }],
+    });
+    expect(result).not.toContain("Title:");
+  });
+
+  it("serializes a single-value field inline", () => {
+    const result = tiptapToFountain(EMPTY_DOC, {
+      fields: [{ key: "Credit", values: ["Written by"] }],
+    });
+    expect(result).toContain("Credit: Written by");
+  });
+
+  it("serializes a multi-value field with 4-space indentation", () => {
+    const result = tiptapToFountain(EMPTY_DOC, {
+      fields: [{ key: "Contact", values: ["123 Main St", "LA, CA"] }],
+    });
+    expect(result).toContain("Contact:");
+    expect(result).toContain("    123 Main St");
+    expect(result).toContain("    LA, CA");
+  });
+
+  it("separates title block from body with exactly one blank line", () => {
+    // titleBlock ends with "\n\n"; body is trimmed so starts with "Action line."
+    // Final output: "Title: MY FILM\n\nAction line." (one blank line between)
+    const result = tiptapToFountain(EMPTY_DOC, {
+      fields: [{ key: "Title", values: ["MY FILM"] }],
+    });
+    expect(result).toContain("Title: MY FILM\n\nAction line.");
+    // Must not have more than one blank line (i.e. not \n\n\n)
+    expect(result).not.toContain("MY FILM\n\n\n");
+  });
+
+  it("preserves key casing (Author vs Authors)", () => {
+    const result = tiptapToFountain(EMPTY_DOC, {
+      fields: [{ key: "Authors", values: ["Jane Smith"] }],
+    });
+    expect(result).toContain("Authors: Jane Smith");
+    expect(result).not.toContain("Author: Jane Smith");
+  });
+
+  it("round-trips title page: parse → serialize → parse produces identical fields", () => {
+    const source = [
+      "Title:",
+      "    _**MY SCREENPLAY**_",
+      "Credit: Written by",
+      "Author: Jane Smith",
+      "Draft date: 3/21/2026",
+      "Contact:",
+      "    123 Main St",
+      "    LA, CA",
+      "",
+      "INT. OFFICE - DAY",
+      "",
+      "Action.",
+    ].join("\n");
+    const { doc, titlePage } = fountainToTiptap(source);
+    const serialized = tiptapToFountain(doc, titlePage);
+    const { titlePage: roundTripped } = fountainToTiptap(serialized);
+    expect(roundTripped.fields.map((f) => f.key)).toEqual(titlePage.fields.map((f) => f.key));
+    expect(roundTripped.fields.map((f) => f.values)).toEqual(
+      titlePage.fields.map((f) => f.values),
+    );
+  });
+
+  it("round-trip normalizes 3-space indent to 4-space on output", () => {
+    // Input uses 3-space indentation (valid Fountain)
+    const source = "Contact:\n   123 Main St\n   LA, CA\n\nAction.\n";
+    const { doc, titlePage } = fountainToTiptap(source);
+    // Values must be preserved
+    expect(titlePage.fields[0].values).toEqual(["123 Main St", "LA, CA"]);
+    const serialized = tiptapToFountain(doc, titlePage);
+    // Output must use 4-space indentation
+    expect(serialized).toContain("    123 Main St");
+    expect(serialized).toContain("    LA, CA");
+    // 3-space form must NOT appear
+    expect(serialized).not.toMatch(/^ {3}[^ ]/m);
+  });
+});
