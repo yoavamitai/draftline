@@ -43,19 +43,22 @@ TIME_OF_DAY = ['DAY', 'NIGHT', 'DAWN', 'DUSK', 'CONTINUOUS', 'SAME', 'LATER', 'M
 
 ## Plugin Changes (`src/editor/extensions/autoComplete.ts`)
 
-When `blockType === 'sceneHeading'`:
+When `blockType === 'sceneHeading'`, **replace the existing `filterSuggestions` call and its surrounding guards with a branched block** that selects the mode and calls the appropriate function. The two existing plugin guards still apply:
+
+- `!currentText.trim()` — operates on the full block text, not the sub-query. A block containing ` - ` is never blank, so this guard never fires in time mode. An empty query in time mode is valid and handled by `getTimeOfDaySuggestions`.
+- `items.length === 0` — fires as usual whenever the active function returns no results.
 
 **Prefix mode** (no ` - ` in block):
 - Calls `getSceneHeadingPrefixSuggestions(currentText, entries, excludePos)`
+- `limit` passed to `filterSuggestions` internally is the same `limit` (default 8); the outer slice to `limit` is the authoritative cap — the inner call may return up to `limit` before dedup, but the merged result is always sliced to `limit`.
 - `select(text)` replaces the entire block text (existing behavior)
 
 **Time mode** (block contains ` - `):
 - Extracts query as text after last ` - ` (may be empty — see `getTimeOfDaySuggestions` above)
-- The plugin's two early-exit guards (`!currentText.trim()` and `items.length === 0`) both apply normally in time mode: the first never fires because a block with ` - ` is non-empty; the second fires as usual when `getTimeOfDaySuggestions` returns no matches.
 - Calls `getTimeOfDaySuggestions(query)`
 - `select(text)` replaces only the suffix — keeps text up to and including ` - `, appends the chosen time value
 - **The `select` closure must re-read `state` at call time** (not close over `currentText`). Inside the `command()` callback, read `$from.parent.textContent` fresh, then recompute the ` - ` split index from that freshly-read content before constructing the replacement string. Do not use any offset captured from `currentText` at `onOpen` time. This avoids stale closure bugs (see commit `88fb33e`).
-- **Fallback when ` - ` is absent at call time**: if the freshly-read block text no longer contains ` - ` (user edited the block between `onOpen` and `select`), the command is a no-op — do not insert anything.
+- **Fallback**: if the freshly-read block text no longer contains ` - ` (user edited the block between `onOpen` and `select`), or if `$from.parent` is no longer a `sceneHeading` node, the command is a no-op — do not insert anything.
 
 `character` blocks continue to use `filterSuggestions` unchanged.
 
@@ -63,7 +66,7 @@ When `blockType === 'sceneHeading'`:
 
 Unit tests for the two new pure functions:
 
-- `getSceneHeadingPrefixSuggestions`: static prefixes appear before doc entries; both filtered by prefix; duplicates removed (static form wins)
+- `getSceneHeadingPrefixSuggestions`: static prefixes appear before doc entries; both filtered by prefix; duplicates removed (static form wins — including when a doc entry matches a static prefix case-insensitively, e.g. doc entry `int.` is dropped in favour of static `INT.`)
 - `getSceneHeadingPrefixSuggestions`: returns only static matches when no doc entries match
 - `getSceneHeadingPrefixSuggestions`: total result is capped at `limit`
 - `getTimeOfDaySuggestions`: filters `TIME_OF_DAY` by prefix match (case-insensitive)
