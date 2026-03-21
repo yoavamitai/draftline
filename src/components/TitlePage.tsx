@@ -12,8 +12,8 @@ const STANDARD_CENTERED = [
 ];
 
 const STANDARD_LOWER_LEFT = [
-  { key: "Draft date", placeholder: "Draft date..." },
   { key: "Contact", placeholder: "Contact..." },
+  { key: "Draft date", placeholder: "Draft date..." },
 ];
 
 const STANDARD_KEYS = new Set(
@@ -76,6 +76,7 @@ function TitleField({
             <span
               contentEditable
               suppressContentEditableWarning
+              data-custom-key-label
               style={{ outline: "none" }}
               onBlur={(e) => {
                 const k = e.currentTarget.textContent?.trim() ?? "";
@@ -262,6 +263,12 @@ export function TitlePage({ editor }: { editor: Editor | null }) {
           onClick={() => {
             addTitlePageField({ key: "Custom", values: [""] });
             setDirty(true);
+            // Focus the new field's key label after React renders it
+            setTimeout(() => {
+              const spans = document.querySelectorAll<HTMLSpanElement>("[data-custom-key-label]");
+              const last = spans[spans.length - 1];
+              last?.focus();
+            }, 0);
           }}
           style={{
             background: "none",
