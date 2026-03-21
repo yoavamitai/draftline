@@ -1,6 +1,5 @@
 import { describe, it, expect } from "vitest";
 import { tiptapToFountain, fountainToTiptap } from "./fountain";
-import type { TitlePageField } from "../types/screenplay";
 
 const SIMPLE_DOC = {
   type: "doc" as const,
