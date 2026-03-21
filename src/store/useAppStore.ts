@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { AppState, RevisionColor } from "../types/screenplay";
+import type { AppState, RevisionColor, TitlePageField, TitlePageData } from "../types/screenplay";
 import { REVISION_COLOR_SEQUENCE } from "../types/screenplay";
 
 interface AppStore extends AppState {
@@ -10,6 +10,12 @@ interface AppStore extends AppState {
   toggleTheme: () => void;
   toggleRevisionMode: () => void;
   nextRevisionDraft: (name: string) => void;
+  titlePage: TitlePageData;
+  setTitlePageField: (key: string, values: string[]) => void;
+  setTitlePageFields: (fields: TitlePageField[]) => void;
+  addTitlePageField: (field: TitlePageField) => void;
+  removeTitlePageField: (key: string) => void;
+  clearTitlePage: () => void;
 }
 
 const initialState: AppState = {
@@ -25,6 +31,7 @@ const initialState: AppState = {
 export const useAppStore = create<AppStore>()(
   persist(
     (set, get) => ({
+      titlePage: { fields: [] } as TitlePageData,
       ...initialState,
       setFilePath: (filePath) => set({ filePath }),
       setScriptName: (scriptName) => set({ scriptName }),
@@ -38,6 +45,30 @@ export const useAppStore = create<AppStore>()(
         ] as RevisionColor;
         set({ revisionColor: next, revisionDraftName: name });
       },
+      setTitlePageField: (key, values) =>
+        set((s) => {
+          const idx = s.titlePage.fields.findIndex(
+            (f) => f.key.toLowerCase() === key.toLowerCase(),
+          );
+          if (idx === -1) {
+            return { titlePage: { fields: [...s.titlePage.fields, { key, values }] } };
+          }
+          const updated = [...s.titlePage.fields];
+          updated[idx] = { key, values };
+          return { titlePage: { fields: updated } };
+        }),
+      setTitlePageFields: (fields) => set({ titlePage: { fields } }),
+      addTitlePageField: (field) =>
+        set((s) => ({ titlePage: { fields: [...s.titlePage.fields, field] } })),
+      removeTitlePageField: (key) =>
+        set((s) => ({
+          titlePage: {
+            fields: s.titlePage.fields.filter(
+              (f) => f.key.toLowerCase() !== key.toLowerCase(),
+            ),
+          },
+        })),
+      clearTitlePage: () => set({ titlePage: { fields: [] } }),
     }),
     {
       name: "screenplay-app-store",
