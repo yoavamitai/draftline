@@ -12,15 +12,18 @@ export async function openFile(editor: any): Promise<boolean> {
   if (!selected || Array.isArray(selected)) return false;
   try {
     const content = await invoke<string>("read_file", { path: selected });
-    const doc = fountainToTiptap(content);
+    const { doc, titlePage } = fountainToTiptap(content);
     const name = selected
       .split(/[\\/]/)
       .pop()!
       .replace(/\.fountain$/i, "");
     editor.commands.setContent(doc);
-    useAppStore.getState().setFilePath(selected);
-    useAppStore.getState().setScriptName(name);
-    useAppStore.getState().setDirty(false);
+    const state = useAppStore.getState();
+    state.clearTitlePage();
+    state.setTitlePageFields(titlePage.fields);
+    state.setFilePath(selected);
+    state.setScriptName(name);
+    state.setDirty(false);
     return true;
   } catch (err) {
     alert(`Failed to open file: ${err}`);

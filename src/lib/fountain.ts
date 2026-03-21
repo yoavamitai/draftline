@@ -1,5 +1,6 @@
 import { Fountain } from "fountain-js";
 import { type TNode, type TDoc, nodeText } from "./nodeUtils";
+import type { TitlePageData, TitlePageField } from "../types/screenplay";
 
 export function tiptapToFountain(doc: TDoc): string {
   const lines: string[] = [];
@@ -40,8 +41,58 @@ export function tiptapToFountain(doc: TDoc): string {
     .trim();
 }
 
-export function fountainToTiptap(source: string): TDoc {
-  const parsed = new Fountain().parse(source, true);
+const TITLE_KEY_RE = /^([A-Za-z][A-Za-z0-9 ]*):(.*)$/;
+const CONTINUATION_RE = /^(\t| {3,})(.*)/;
+
+function extractTitlePage(source: string): { fields: TitlePageField[]; bodySource: string } {
+  const lines = source.split("\n");
+  const fields: TitlePageField[] = [];
+  let i = 0;
+
+  // Skip truly blank leading lines
+  while (i < lines.length && lines[i] === "") i++;
+
+  // If first non-blank line is not a key line, no title block
+  if (i >= lines.length || !TITLE_KEY_RE.test(lines[i])) {
+    return { fields: [], bodySource: source };
+  }
+
+  let currentField: TitlePageField | null = null;
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    // Truly blank line terminates the title block
+    if (line === "" || line === "\r") {
+      i++;
+      break;
+    }
+
+    const keyMatch = TITLE_KEY_RE.exec(line);
+    const contMatch = CONTINUATION_RE.exec(line);
+
+    if (keyMatch) {
+      currentField = { key: keyMatch[1], values: [] };
+      const inline = keyMatch[2].trim();
+      if (inline) currentField.values.push(inline);
+      fields.push(currentField);
+    } else if (contMatch && currentField) {
+      currentField.values.push(contMatch[2]);
+    } else {
+      // Non-key, non-continuation, non-blank: end of block
+      break;
+    }
+    i++;
+  }
+
+  const bodySource = lines.slice(i).join("\n");
+  return { fields, bodySource };
+}
+
+export function fountainToTiptap(source: string): { doc: TDoc; titlePage: TitlePageData } {
+  const { fields, bodySource } = extractTitlePage(source);
+
+  const parsed = new Fountain().parse(bodySource, true);
   const content: TNode[] = [];
 
   for (const token of parsed.tokens ?? []) {
@@ -81,5 +132,6 @@ export function fountainToTiptap(source: string): TDoc {
   if (content.length === 0) {
     content.push({ type: "action", content: [{ type: "text", text: "" }] });
   }
-  return { type: "doc", content };
+
+  return { doc: { type: "doc", content }, titlePage: { fields } };
 }
