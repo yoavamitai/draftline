@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { filterSuggestions } from "./autocomplete";
+import { filterSuggestions, getSceneHeadingPrefixSuggestions, getTimeOfDaySuggestions, TIME_OF_DAY } from "./autocomplete";
 import type { DocEntry } from "./autocomplete";
 
 describe("filterSuggestions", () => {
@@ -69,5 +69,78 @@ describe("filterSuggestions", () => {
       { text: "JOHN", pos: 20 },
     ];
     expect(filterSuggestions(entries, "J", 999)).toEqual(["JOHN"]);
+  });
+});
+
+describe("getSceneHeadingPrefixSuggestions", () => {
+  it("returns matching static prefixes before doc entries", () => {
+    const entries: DocEntry[] = [
+      { text: "INT. OFFICE - DAY", pos: 10 },
+    ];
+    const result = getSceneHeadingPrefixSuggestions("INT", entries, 999);
+    expect(result[0]).toBe("INT.");
+    expect(result).toContain("INT./EXT.");
+    expect(result).toContain("INT. OFFICE - DAY");
+    expect(result.indexOf("INT.")).toBeLessThan(result.indexOf("INT. OFFICE - DAY"));
+  });
+
+  it("returns only static matches when no doc entries match", () => {
+    const entries: DocEntry[] = [
+      { text: "EXT. PARK - DAY", pos: 10 },
+    ];
+    const result = getSceneHeadingPrefixSuggestions("INT", entries, 999);
+    expect(result).toContain("INT.");
+    expect(result).toContain("INT./EXT.");
+    expect(result).not.toContain("EXT. PARK - DAY");
+  });
+
+  it("deduplicates case-insensitively, keeping static form", () => {
+    const entries: DocEntry[] = [
+      { text: "int.", pos: 10 },
+    ];
+    const result = getSceneHeadingPrefixSuggestions("INT", entries, 999);
+    expect(result).toContain("INT.");
+    expect(result).not.toContain("int.");
+    expect(result.filter(r => r.toLowerCase() === "int.")).toHaveLength(1);
+  });
+
+  it("caps total result at limit", () => {
+    const entries: DocEntry[] = Array.from({ length: 20 }, (_, i) => ({
+      text: `INT. ROOM_${i} - DAY`,
+      pos: i * 10,
+    }));
+    const result = getSceneHeadingPrefixSuggestions("INT", entries, 999, 5);
+    expect(result).toHaveLength(5);
+  });
+
+  it("returns empty when query does not match anything", () => {
+    const entries: DocEntry[] = [{ text: "INT. OFFICE - DAY", pos: 10 }];
+    expect(getSceneHeadingPrefixSuggestions("XYZ", entries, 999)).toEqual([]);
+  });
+});
+
+describe("getTimeOfDaySuggestions", () => {
+  it("filters TIME_OF_DAY by case-insensitive prefix match", () => {
+    expect(getTimeOfDaySuggestions("D")).toContain("DAY");
+    expect(getTimeOfDaySuggestions("D")).toContain("DAWN");
+    expect(getTimeOfDaySuggestions("D")).not.toContain("NIGHT");
+    expect(getTimeOfDaySuggestions("d")).toContain("DAY");
+  });
+
+  it("returns full TIME_OF_DAY list when query is empty", () => {
+    expect(getTimeOfDaySuggestions("")).toEqual(TIME_OF_DAY);
+  });
+
+  it("returns full TIME_OF_DAY list when query is whitespace only", () => {
+    expect(getTimeOfDaySuggestions("   ")).toEqual(TIME_OF_DAY);
+  });
+
+  it("returns empty array when non-empty query matches nothing", () => {
+    expect(getTimeOfDaySuggestions("XYZ")).toEqual([]);
+  });
+
+  it("matches multi-word entries by prefix", () => {
+    expect(getTimeOfDaySuggestions("MOM")).toContain("MOMENTS LATER");
+    expect(getTimeOfDaySuggestions("moments")).toContain("MOMENTS LATER");
   });
 });

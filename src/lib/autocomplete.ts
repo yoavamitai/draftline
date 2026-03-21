@@ -36,3 +36,48 @@ export function filterSuggestions(
     .slice(0, limit)
     .map(([text]) => text);
 }
+
+export const SCENE_HEADING_PREFIXES = ['INT.', 'EXT.', 'INT./EXT.', 'EXT./INT.'];
+
+export const TIME_OF_DAY = ['DAY', 'NIGHT', 'DAWN', 'DUSK', 'CONTINUOUS', 'SAME', 'LATER', 'MOMENTS LATER'];
+
+/**
+ * Suggestions for the prefix portion of a scene heading (before ` - `).
+ * Static prefixes come first; document entries follow, deduplicated.
+ */
+export function getSceneHeadingPrefixSuggestions(
+  query: string,
+  docEntries: DocEntry[],
+  excludePos: number,
+  limit = 8,
+): string[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+
+  const staticMatches = SCENE_HEADING_PREFIXES.filter(p =>
+    p.toLowerCase().startsWith(q)
+  );
+
+  const docMatches = filterSuggestions(docEntries, query, excludePos, limit);
+
+  const seen = new Set(staticMatches.map(s => s.toLowerCase()));
+  const merged = [...staticMatches];
+  for (const doc of docMatches) {
+    if (!seen.has(doc.toLowerCase())) {
+      merged.push(doc);
+      seen.add(doc.toLowerCase());
+    }
+  }
+
+  return merged.slice(0, limit);
+}
+
+/**
+ * Suggestions for the time-of-day portion of a scene heading (after ` - `).
+ * Returns the full list when query is empty.
+ */
+export function getTimeOfDaySuggestions(query: string): string[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return [...TIME_OF_DAY];
+  return TIME_OF_DAY.filter(t => t.toLowerCase().startsWith(q));
+}
