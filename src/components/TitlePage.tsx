@@ -1,7 +1,9 @@
 // src/components/TitlePage.tsx
 import { useRef, useEffect, useCallback } from "react";
 import type { Editor } from "@tiptap/core";
+import { useShallow } from "zustand/react/shallow";
 import { useAppStore } from "../store/useAppStore";
+import { Button } from "./ui/button";
 
 // Standard fields always rendered in fixed positions
 const STANDARD_CENTERED = [
@@ -31,6 +33,7 @@ interface FieldProps {
   onCommit: (values: string[]) => void;
   onKeyDown: (e: React.KeyboardEvent<HTMLTextAreaElement>) => void;
   onRemoveKey?: () => void;
+  onDirty: () => void;
 }
 
 function TitleField({
@@ -44,8 +47,8 @@ function TitleField({
   onCommit,
   onKeyDown,
   onRemoveKey,
+  onDirty,
 }: FieldProps) {
-  const setDirty = useAppStore((s) => s.setDirty);
   const innerRef = useRef<HTMLTextAreaElement | null>(null);
 
   function setRef(el: HTMLTextAreaElement | null) {
@@ -104,7 +107,7 @@ function TitleField({
         placeholder={placeholder}
         tabIndex={tabIndex}
         onInput={autoResize}
-        onChange={() => setDirty(true)}
+        onChange={() => onDirty()}
         onBlur={(e) => {
           const text = e.currentTarget.value;
           onCommit(text === "" ? [""] : text.split("\n"));
@@ -131,12 +134,17 @@ function TitleField({
 }
 
 export function TitlePage({ editor }: { editor: Editor | null }) {
-  const fields = useAppStore((s) => s.titlePage.fields);
-  const setTitlePageField = useAppStore((s) => s.setTitlePageField);
-  const setTitlePageFields = useAppStore((s) => s.setTitlePageFields);
-  const addTitlePageField = useAppStore((s) => s.addTitlePageField);
-  const removeTitlePageField = useAppStore((s) => s.removeTitlePageField);
-  const setDirty = useAppStore((s) => s.setDirty);
+  const { fields, setTitlePageField, setTitlePageFields, addTitlePageField, removeTitlePageField, setDirty } =
+    useAppStore(
+      useShallow((s) => ({
+        fields: s.titlePage.fields,
+        setTitlePageField: s.setTitlePageField,
+        setTitlePageFields: s.setTitlePageFields,
+        addTitlePageField: s.addTitlePageField,
+        removeTitlePageField: s.removeTitlePageField,
+        setDirty: s.setDirty,
+      })),
+    );
 
   const fieldMap = new Map(fields.map((f) => [f.key.toLowerCase(), f]));
   const customFields = fields.filter((f) => !STANDARD_KEYS.has(f.key.toLowerCase()));
@@ -210,6 +218,7 @@ export function TitlePage({ editor }: { editor: Editor | null }) {
             textareaRef={makeTextareaRef(i)}
             onCommit={handleCommit(s.key)}
             onKeyDown={handleKeyDown(i)}
+            onDirty={() => setDirty(true)}
           />
         ))}
       </div>
@@ -229,6 +238,7 @@ export function TitlePage({ editor }: { editor: Editor | null }) {
               textareaRef={makeTextareaRef(globalIdx)}
               onCommit={handleCommit(s.key)}
               onKeyDown={handleKeyDown(globalIdx)}
+              onDirty={() => setDirty(true)}
             />
           );
         })}
@@ -256,34 +266,26 @@ export function TitlePage({ editor }: { editor: Editor | null }) {
                 removeTitlePageField(f.key);
                 setDirty(true);
               }}
+              onDirty={() => setDirty(true)}
             />
           );
         })}
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
+          className="opacity-40 text-xs px-0 h-auto mt-2"
           onClick={() => {
             addTitlePageField({ key: "Custom", values: [""] });
             setDirty(true);
-            // Focus the new field's key label after React renders it
             setTimeout(() => {
               const spans = document.querySelectorAll<HTMLSpanElement>("[data-custom-key-label]");
               const last = spans[spans.length - 1];
               last?.focus();
             }, 0);
           }}
-          style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            opacity: 0.4,
-            fontSize: "0.75rem",
-            padding: 0,
-            color: "inherit",
-            display: "block",
-            marginTop: "0.5rem",
-          }}
         >
           + Add field
-        </button>
+        </Button>
       </div>
     </div>
   );
