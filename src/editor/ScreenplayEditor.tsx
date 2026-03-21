@@ -158,7 +158,7 @@ export function ScreenplayEditor({ onEditorReady }: Props) {
         items={acState?.items ?? []}
         activeIndex={acState?.activeIndex ?? 0}
         onSelect={(text) => {
-          acState?.select(text);
+          acStateRef.current?.select(text);
           setAcState(null);
         }}
         onClose={handleAcClose}
